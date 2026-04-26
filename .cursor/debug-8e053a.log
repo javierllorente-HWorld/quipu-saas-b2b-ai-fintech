@@ -1,0 +1,48 @@
+{"sessionId":"8e053a","timestamp":1777243151969,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243151970,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243152722,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243152727,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243152795,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243152800,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243183193,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243183193,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243183383,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243183384,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243185190,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243185191,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243188641,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243188642,"hypothesisId":"B","location":"QuipuLogo.tsx:onError","message":"next/image onError","data":{}}
+{"sessionId":"8e053a","timestamp":1777243188781,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243188792,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243405194,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243405196,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243405206,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":200,"ok":true,"contentType":"image/png"}}
+{"sessionId":"8e053a","timestamp":1777243405206,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":200,"ok":true,"contentType":"image/png"}}
+{"sessionId":"8e053a","timestamp":1777243616155,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243616157,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243616305,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243616316,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243617789,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243617790,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243618033,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243618042,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243642889,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243642890,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243643145,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243643154,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243669637,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243669640,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243669782,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243669789,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243690292,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243690293,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243690450,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243690457,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243882509,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243882511,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777243882644,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777243882652,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777244108701,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777244108808,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}
+{"sessionId":"8e053a","timestamp":1777244110236,"hypothesisId":"C","location":"QuipuLogo.tsx:onLoad","message":"next/image onLoad","data":{}}
+{"sessionId":"8e053a","timestamp":1777244110385,"hypothesisId":"A","location":"QuipuLogo.tsx:probe","message":"GET /quipu-logo.png response","data":{"status":404,"ok":false,"contentType":"text/html; charset=utf-8"}}

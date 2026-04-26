@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand palette */
+  --quipu-night: #071b4a;
+  --quipu-deep: #0a2f7a;
+  --quipu-primary: #114ed8;
+  --quipu-accent: #2e6bff;
+  --quipu-ice: #e8eef8;
+  --quipu-bg: #f7f9fc;
+  --quipu-white: #ffffff;
+  --quipu-text: #071b4a;
+  --quipu-text-muted: #5b6b86;
+  --quipu-border: #dce6f7;
+
+  /* Theme tokens */
+  --background: var(--quipu-bg);
+  --foreground: var(--quipu-text);
+  --muted-foreground: var(--quipu-text-muted);
+  --card: var(--quipu-white);
+  --border: var(--quipu-border);
+
+  --primary: var(--quipu-primary);
+  --primary-foreground: var(--quipu-white);
+  --ring: rgba(17, 78, 216, 0.28);
+
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+
+  --shadow-card: 0 10px 28px rgba(7, 27, 74, 0.08);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --radius-lg: var(--radius-lg);
+  --radius-md: var(--radius-md);
+  --radius-sm: var(--radius-sm);
+
+  --font-sans: var(--font-inter);
+}
+
+body {
+  font-family: var(--font-inter), system-ui, -apple-system, Segoe UI, Roboto,
+    Arial, sans-serif;
+}
+
+@layer base {
+  ::selection {
+    background: rgba(46, 107, 255, 0.22);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  :focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 4px var(--ring);
+    border-radius: 12px;
+  }
+}
+
+@layer components {
+  /* Layout */
+  .qp-shell {
+    @apply min-h-screen bg-background text-foreground;
+  }
+
+  .qp-container {
+    @apply mx-auto w-full max-w-6xl px-6;
+  }
+
+  /* Typography */
+  .qp-title {
+    @apply text-balance text-3xl font-semibold tracking-tight sm:text-4xl;
+  }
+
+  .qp-subtitle {
+    @apply text-pretty text-base leading-7 text-muted-foreground;
+  }
+
+  .qp-label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .qp-muted {
+    @apply text-sm text-muted-foreground;
+  }
+
+  /* Card */
+  .qp-card {
+    @apply rounded-[var(--radius-lg)] border border-border bg-card;
+    box-shadow: var(--shadow-card);
+  }
+
+  .qp-card-header {
+    @apply px-6 pt-6;
+  }
+
+  .qp-card-content {
+    @apply px-6 pb-6;
+  }
+
+  /* Buttons */
+  .qp-btn {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium transition active:translate-y-px disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .qp-btn-primary {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:opacity-90 active:translate-y-px disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .qp-btn-secondary {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-medium text-foreground transition hover:bg-white/70 active:translate-y-px disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .qp-btn-ghost {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full bg-transparent px-5 text-sm font-medium text-foreground transition hover:bg-black/5 active:translate-y-px disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  /* Inputs */
+  .qp-input {
+    @apply h-11 w-full rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground placeholder:text-muted-foreground transition;
+  }
+
+  .qp-input:focus {
+    outline: 0;
+    box-shadow: 0 0 0 4px var(--ring);
+  }
+}
