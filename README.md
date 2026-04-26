@@ -1,32 +1,41 @@
 # Quipu
 
-## Qué es?
+SaaS B2B fintech para gestión financiera de pymes en LATAM.
 
-Una web app SaaS B2B fintech para gestión financiera de pymes en LATAM.
+## Qué es
 
-## Para quién es?
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-Dueños, gerentes generales, financieros y altos mandos de pymes que necesitan controlar caja, cobros, pagos y reportes en un solo lugar.
+## Stack
 
-## Problema que resuelve
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
 
-Las pymes suelen tener información financiera dispersa entre bancos, planillas, facturas y sistemas separados, lo que dificulta saber cuánta caja tienen, qué deben cobrar, qué deben pagar y cómo viene el negocio.
+## Requisitos
 
-## Propuesta de valor
+- Node.js 20+
 
-Quipu centraliza la visión financiera de la pyme y permite tomar mejores decisiones con datos claros, proyecciones e IA.
+## Correr en local
 
-## Alcance del MVP
+Instalar dependencias:
 
-Primera versión con:
+```bash
+npm install
+```
 
-- Login
-- Dashboard inicial
-- Caja
-- Cobros
-- Pagos
-- Tesorería
-- Reportes
-- Copiloto IA
-- Alertas y acciones sugeridas
-- Visualización de KPIs, tablas y gráficos
+Levantar en modo desarrollo:
+
+```bash
+npm run dev
+```
+
+Abrir `http://localhost:3000`.
