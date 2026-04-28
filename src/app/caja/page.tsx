@@ -4,19 +4,17 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
-import { KpiRow } from "@/components/inicio/KpiRow";
-import { CashflowChart } from "@/components/inicio/CashflowChart";
-import { AlertsPanel } from "@/components/inicio/AlertsPanel";
-import { UpcomingTable } from "@/components/inicio/UpcomingTable";
-import { RecentActivity } from "@/components/inicio/RecentActivity";
-import { CopilotCard } from "@/components/inicio/CopilotCard";
-import {
-  mockCompanies,
-  mockDashboardByCompanyId,
-} from "@/components/inicio/mock";
+import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
+import { mockCashByCompanyId } from "@/components/caja/mock";
+import { CajaKpiRow } from "@/components/caja/KpiRow";
+import { CashEvolutionChart } from "@/components/caja/CashEvolutionChart";
+import { CashDistribution } from "@/components/caja/CashDistribution";
+import { BankBalancesTable } from "@/components/caja/BankBalancesTable";
+import { UpcomingMovementsTable } from "@/components/caja/UpcomingMovementsTable";
+import { RecentMovementsTable } from "@/components/caja/RecentMovementsTable";
 
-export default function InicioPage() {
+export default function CajaPage() {
   const router = useRouter();
   const [activeCompanyId, setActiveCompanyId] = React.useState(
     mockCompanies[0]?.id ?? "acme-ar",
@@ -25,7 +23,7 @@ export default function InicioPage() {
 
   const company =
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
-  const data = mockDashboardByCompanyId[company.id];
+  const data = mockCashByCompanyId[company.id] ?? mockCashByCompanyId["acme-ar"];
 
   const onNavigate = React.useCallback(
     (key: string) => {
@@ -47,7 +45,7 @@ export default function InicioPage() {
     <div className="qp-shell">
       <div className="min-h-screen bg-background md:flex">
         <div className="hidden md:block md:shrink-0">
-          <Sidebar activeKey="inicio" onNavigate={onNavigate} />
+          <Sidebar activeKey="caja" onNavigate={onNavigate} />
         </div>
 
         {sidebarOpen ? (
@@ -58,7 +56,7 @@ export default function InicioPage() {
             />
             <div className="absolute left-0 top-0 h-full w-[86%] max-w-[260px] shadow-2xl">
               <Sidebar
-                activeKey="inicio"
+                activeKey="caja"
                 onNavigate={onNavigate}
                 footerCta={
                   <button
@@ -90,10 +88,10 @@ export default function InicioPage() {
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                      Inicio
+                      Caja
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Resumen de salud financiera — {company.name}
+                      Posición de caja en tiempo real — {company.name}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -108,27 +106,37 @@ export default function InicioPage() {
               </header>
 
               <section className="space-y-4">
-                <KpiRow kpis={data.kpis} currency={company.currency} />
+                <CajaKpiRow kpis={data.kpis} currency={company.currency} />
 
                 <div className="grid gap-4 lg:grid-cols-3">
                   <div className="lg:col-span-2">
-                    <CashflowChart points={data.cashflow} currency={company.currency} />
+                    <CashEvolutionChart points={data.evolution} currency={company.currency} />
                   </div>
                   <div className="lg:col-span-1">
-                    <AlertsPanel alerts={data.alerts} />
+                    <CashDistribution items={data.distribution} currency={company.currency} />
                   </div>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-3">
                   <div className="lg:col-span-2">
-                    <UpcomingTable items={data.upcoming} currency={company.currency} />
+                    <BankBalancesTable
+                      items={data.bankBalances}
+                      currency={company.currency}
+                    />
                   </div>
                   <div className="lg:col-span-1">
-                    <RecentActivity items={data.activity} currency={company.currency} />
+                    <UpcomingMovementsTable
+                      items={data.upcoming}
+                      currency={company.currency}
+                    />
                   </div>
                 </div>
 
-                <CopilotCard suggestions={data.copilotSuggestions} />
+                <RecentMovementsTable items={data.recent} currency={company.currency} />
+
+                <div className="pt-2 text-center text-xs text-muted-foreground">
+                  Los datos se actualizan en tiempo real desde tus bancos conectados.
+                </div>
               </section>
             </div>
           </main>
