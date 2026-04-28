@@ -1,5 +1,3 @@
-import { QuipuLogo } from "@/components/QuipuLogo";
-
 function BenefitIcon({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex size-9 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
@@ -29,7 +27,7 @@ export default function LoginPage() {
                 <div>
                   <div className="mb-8">
                     <img
-                      src="/quipu-logo-transparent.png"
+                      src="/ISOLOGO%20BLANCO.png"
                       alt="Quipu"
                       className="h-auto w-[190px] object-contain drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]"
                     />
