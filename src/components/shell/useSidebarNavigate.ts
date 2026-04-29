@@ -29,6 +29,8 @@ function pathForKey(key: NavigateKey) {
       return "/tesoreria";
     case "reportes":
       return "/reportes";
+    case "ia":
+      return "/ia";
     default:
       return null;
   }
