@@ -3,12 +3,7 @@
 import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney } from "@/components/inicio/format";
-import type { CashDistributionItem } from "./mock";
-
-export type CashDistributionProps = {
-  items: CashDistributionItem[];
-  currency: CurrencyCode;
-};
+import type { DebtAgingItem } from "./mock";
 
 function clamp01(x: number) {
   return Math.max(0, Math.min(1, x));
@@ -43,30 +38,36 @@ function arcPath(
 
 const toneByKey: Record<string, { swatch: string; fill: string; ring: string }> =
   {
-    banks: {
+    noVencido: {
       swatch: "bg-[color:var(--quipu-accent)]",
       fill: "rgba(46,107,255,1)",
       ring: "ring-[color:var(--quipu-border)]",
     },
-    cash: {
+    vencido31_60: {
       swatch: "bg-[color:var(--quipu-primary)]",
       fill: "rgba(17,78,216,0.92)",
       ring: "ring-[color:var(--quipu-border)]",
     },
-    investments: {
+    vencido61_90: {
       swatch: "bg-[color:var(--quipu-night)]",
       fill: "rgba(7,27,74,0.70)",
       ring: "ring-[color:var(--quipu-border)]",
     },
-    inTransit: {
-      swatch: "bg-slate-400",
-      fill: "rgba(100,116,139,0.55)",
-      ring: "ring-[color:var(--quipu-border)]",
+    vencido90p: {
+      swatch: "bg-rose-500",
+      fill: "rgba(244,63,94,0.92)",
+      ring: "ring-rose-100",
     },
   };
 
-export function CashDistribution({ items, currency }: CashDistributionProps) {
-  const total = items.reduce((acc, x) => acc + x.amount, 0);
+export type DebtAgingDonutProps = {
+  title: string;
+  total: number;
+  items: DebtAgingItem[];
+  currency: CurrencyCode;
+};
+
+export function DebtAgingDonut({ title, total, items, currency }: DebtAgingDonutProps) {
   const safeTotal = total <= 0 ? 1 : total;
 
   const w = 240;
@@ -77,7 +78,7 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
   const rInner = 66;
 
   const segments = items.reduce<
-    { item: CashDistributionItem; startAngle: number; endAngle: number }[]
+    { item: DebtAgingItem; startAngle: number; endAngle: number }[]
   >((acc, it) => {
     const pct = clamp01(it.amount / safeTotal);
     const sweep = pct * 360;
@@ -89,14 +90,20 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
   return (
     <div className="qp-card">
       <div className="qp-card-header">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-base font-semibold tracking-tight">
-              Distribución de caja
-            </div>
+            <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Cómo está compuesto tu saldo disponible (mock).
+              Distribución por antigüedad para priorizar riesgos.
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <select className="h-9 rounded-full border border-border bg-card px-3 text-xs font-semibold text-muted-foreground hover:bg-white/70">
+              <option>Todos los clientes</option>
+            </select>
+            <select className="h-9 rounded-full border border-border bg-card px-3 text-xs font-semibold text-muted-foreground hover:bg-white/70">
+              <option>Monto</option>
+            </select>
           </div>
         </div>
       </div>
@@ -104,19 +111,13 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
       <div className="qp-card-content">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,180px)_minmax(0,1fr)] lg:items-start">
           <div className="mx-auto w-full max-w-[200px]">
-            <svg
-              viewBox={`0 0 ${w} ${h}`}
-              className="h-auto w-full"
-              role="img"
-              aria-label="Distribución de caja"
-            >
+            <svg viewBox={`0 0 ${w} ${h}`} className="h-auto w-full" role="img">
               {segments.map((s) => {
-                const tone = toneByKey[s.item.key] ?? toneByKey.inTransit;
-                const d = arcPath(cx, cy, rOuter, rInner, s.startAngle, s.endAngle);
+                const tone = toneByKey[s.item.key] ?? toneByKey.noVencido;
                 return (
                   <path
                     key={s.item.key}
-                    d={d}
+                    d={arcPath(cx, cy, rOuter, rInner, s.startAngle, s.endAngle)}
                     fill={tone.fill}
                     stroke="rgba(255,255,255,0.85)"
                     strokeWidth="1.1"
@@ -131,7 +132,7 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
                 className="fill-[color:var(--foreground)]"
                 style={{ fontSize: 12, fontWeight: 600 }}
               >
-                Total
+                Total por cobrar
               </text>
               <text
                 x={cx}
@@ -147,7 +148,7 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
 
           <div className="min-w-0 space-y-2">
             {items.map((it) => {
-              const tone = toneByKey[it.key] ?? toneByKey.inTransit;
+              const tone = toneByKey[it.key] ?? toneByKey.noVencido;
               const pct = total <= 0 ? 0 : (it.amount / total) * 100;
               return (
                 <div
@@ -170,7 +171,6 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
                       </div>
                     </div>
 
-                    {/* Mobile/medium: second line with % (left) and amount (right) */}
                     <div className="col-start-2 flex items-center justify-between gap-3 lg:hidden">
                       <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
                         {pct.toFixed(1)}%
@@ -180,7 +180,6 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
                       </div>
                     </div>
 
-                    {/* Large: 4 columns in a single row */}
                     <div className="hidden text-right lg:block">
                       <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
                         {pct.toFixed(1)}%

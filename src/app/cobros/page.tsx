@@ -5,16 +5,17 @@ import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
 import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
-import { mockCashByCompanyId } from "@/components/caja/mock";
-import { CajaKpiRow } from "@/components/caja/KpiRow";
-import { CashEvolutionChart } from "@/components/caja/CashEvolutionChart";
-import { CashDistribution } from "@/components/caja/CashDistribution";
-import { BankBalancesTable } from "@/components/caja/BankBalancesTable";
-import { UpcomingMovementsTable } from "@/components/caja/UpcomingMovementsTable";
-import { RecentMovementsTable } from "@/components/caja/RecentMovementsTable";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
+import { mockCobrosByCompanyId } from "@/components/cobros/mock";
+import { CobrosKpiRow } from "@/components/cobros/KpiRow";
+import { DebtAgingDonut } from "@/components/cobros/DebtAgingDonut";
+import { CollectionsEvolutionChart } from "@/components/cobros/CollectionsEvolutionChart";
+import { CollectionsAlerts } from "@/components/cobros/CollectionsAlerts";
+import { CustomersReceivableTable } from "@/components/cobros/CustomersReceivableTable";
+import { InvoicesPendingTable } from "@/components/cobros/InvoicesPendingTable";
+import { RecentCollectionsActivity } from "@/components/cobros/RecentCollectionsActivity";
 
-export default function CajaPage() {
+export default function CobrosPage() {
   const [activeCompanyId, setActiveCompanyId] = React.useState(
     mockCompanies[0]?.id ?? "acme-ar",
   );
@@ -22,7 +23,8 @@ export default function CajaPage() {
 
   const company =
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
-  const data = mockCashByCompanyId[company.id] ?? mockCashByCompanyId["acme-ar"];
+  const data =
+    mockCobrosByCompanyId[company.id] ?? mockCobrosByCompanyId["acme-ar"];
 
   const onNavigate = useSidebarNavigate({
     onAfterNavigate: () => setSidebarOpen(false),
@@ -32,7 +34,7 @@ export default function CajaPage() {
     <div className="qp-shell">
       <div className="min-h-screen bg-background md:flex">
         <div className="hidden md:block md:shrink-0">
-          <Sidebar activeKey="caja" onNavigate={onNavigate} />
+          <Sidebar activeKey="cobros" onNavigate={onNavigate} />
         </div>
 
         {sidebarOpen ? (
@@ -43,7 +45,7 @@ export default function CajaPage() {
             />
             <div className="absolute left-0 top-0 h-full w-[86%] max-w-[260px] shadow-2xl">
               <Sidebar
-                activeKey="caja"
+                activeKey="cobros"
                 onNavigate={onNavigate}
                 footerCta={
                   <button
@@ -75,54 +77,69 @@ export default function CajaPage() {
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                      Caja
+                      Cobros
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Posición de caja en tiempo real — {company.name}
+                      Gestión cuentas por cobrar, facturas pendientes y seguimiento a
+                      clientes. Priorizá vencidos y acelerá la cobranza.
                     </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button type="button" className="qp-btn-secondary h-10 px-4">
-                      Exportar
-                    </button>
-                    <button type="button" className="qp-btn-primary h-10 px-4">
-                      Registrar movimiento
-                    </button>
                   </div>
                 </div>
               </header>
 
               <section className="space-y-4">
-                <CajaKpiRow kpis={data.kpis} currency={company.currency} />
+                <CobrosKpiRow kpis={data.kpis} currency={company.currency} />
 
                 <div className="grid gap-4 lg:grid-cols-3">
                   <div className="lg:col-span-2">
-                    <CashEvolutionChart points={data.evolution} currency={company.currency} />
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <DebtAgingDonut
+                        title="Antigüedad de deuda"
+                        items={data.aging.items}
+                        total={data.aging.total}
+                        currency={company.currency}
+                      />
+                      <CollectionsEvolutionChart
+                        points={data.evolution.points}
+                        currency={company.currency}
+                      />
+                    </div>
                   </div>
                   <div className="lg:col-span-1">
-                    <CashDistribution items={data.distribution} currency={company.currency} />
+                    <CollectionsAlerts
+                      title="Alertas de cobranza"
+                      items={data.alerts}
+                    />
                   </div>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <BankBalancesTable
-                      items={data.bankBalances}
+                  <div className="lg:col-span-1">
+                    <CustomersReceivableTable
+                      title="Clientes por cobrar"
+                      items={data.customers}
                       currency={company.currency}
                     />
                   </div>
                   <div className="lg:col-span-1">
-                    <UpcomingMovementsTable
-                      items={data.upcoming}
+                    <InvoicesPendingTable
+                      title="Facturas pendientes"
+                      items={data.invoices}
+                      currency={company.currency}
+                    />
+                  </div>
+                  <div className="lg:col-span-1">
+                    <RecentCollectionsActivity
+                      title="Actividad reciente"
+                      items={data.activity}
                       currency={company.currency}
                     />
                   </div>
                 </div>
-
-                <RecentMovementsTable items={data.recent} currency={company.currency} />
 
                 <div className="pt-2 text-center text-xs text-muted-foreground">
-                  Los datos se actualizan en tiempo real desde tus bancos conectados.
+                  Los datos se actualizan en tiempo real desde tus documentos y
+                  cuentas por cobrar.
                 </div>
               </section>
             </div>

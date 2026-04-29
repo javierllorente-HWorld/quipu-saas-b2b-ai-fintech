@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
 import { KpiRow } from "@/components/inicio/KpiRow";
@@ -15,9 +14,9 @@ import {
   mockDashboardByCompanyId,
 } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
+import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 
 export default function InicioPage() {
-  const router = useRouter();
   const [activeCompanyId, setActiveCompanyId] = React.useState(
     mockCompanies[0]?.id ?? "acme-ar",
   );
@@ -27,21 +26,9 @@ export default function InicioPage() {
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
   const data = mockDashboardByCompanyId[company.id];
 
-  const onNavigate = React.useCallback(
-    (key: string) => {
-      if (key === "inicio") {
-        router.push("/inicio");
-        setSidebarOpen(false);
-        return;
-      }
-      if (key === "caja") {
-        router.push("/caja");
-        setSidebarOpen(false);
-        return;
-      }
-    },
-    [router],
-  );
+  const onNavigate = useSidebarNavigate({
+    onAfterNavigate: () => setSidebarOpen(false),
+  });
 
   return (
     <div className="qp-shell">
