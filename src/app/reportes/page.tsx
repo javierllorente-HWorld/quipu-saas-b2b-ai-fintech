@@ -14,11 +14,12 @@ import { FiltersExportCard } from "@/components/reportes/FiltersExportCard";
 import { UnitSummaryTable } from "@/components/reportes/UnitSummaryTable";
 import { KeyIndicatorsTable } from "@/components/reportes/KeyIndicatorsTable";
 import { RecentReportsTable } from "@/components/reportes/RecentReportsTable";
+import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 
 export default function ReportesPage() {
-  const [activeCompanyId, setActiveCompanyId] = React.useState(
-    mockCompanies[0]?.id ?? "acme-ar",
-  );
+  useRequireDemoAuth();
+
+  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const company =
@@ -47,6 +48,7 @@ export default function ReportesPage() {
               <Sidebar
                 activeKey="reportes"
                 onNavigate={onNavigate}
+                forceExpanded
                 footerCta={
                   <button
                     type="button"
@@ -67,7 +69,7 @@ export default function ReportesPage() {
           <Topbar
             companies={mockCompanies}
             activeCompanyId={activeCompanyId}
-            onCompanyChange={(id) => setActiveCompanyId(id)}
+            onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 

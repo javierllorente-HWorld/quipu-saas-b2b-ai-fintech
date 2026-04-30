@@ -23,18 +23,18 @@ export function CopilotCard({ suggestions }: CopilotCardProps) {
               Preguntale a tu caja.
             </div>
             <div className="mt-1 text-sm text-white/70">
-              Consultas inteligentes para decidir mejor (UI mock).
+              Consultas inteligentes para decidir mejor.
             </div>
-          </div>
-          <div className="hidden rounded-2xl bg-[color:var(--quipu-accent)]/15 px-3 py-2 text-xs text-white/80 ring-1 ring-white/10 sm:block">
-            IA financiera
           </div>
         </div>
       </div>
 
       <div className="px-6 pb-6">
         <div className="mt-5 flex flex-wrap gap-2">
-          {suggestions.slice(0, 4).map((q) => (
+          {suggestions
+            .filter((q) => q !== "Proyectá mi saldo a 30 días.")
+            .slice(0, 4)
+            .map((q) => (
             <button
               key={q}
               type="button"
@@ -63,9 +63,6 @@ export function CopilotCard({ suggestions }: CopilotCardProps) {
               <IconSparkles className="size-4" />
               Consultar
             </button>
-          </div>
-          <div className="mt-3 text-xs text-white/55">
-            Ejemplo: “Proyectá mi saldo a 30 días y marcá la semana de mayor riesgo”.
           </div>
         </div>
       </div>

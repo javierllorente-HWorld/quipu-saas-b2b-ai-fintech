@@ -13,11 +13,12 @@ import { AlertsApprovals } from "@/components/pagos/AlertsApprovals";
 import { UpcomingPaymentsTable } from "@/components/pagos/UpcomingPaymentsTable";
 import { VendorsTable } from "@/components/pagos/VendorsTable";
 import { RecentPaymentsTable } from "@/components/pagos/RecentPaymentsTable";
+import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 
 export default function PagosPage() {
-  const [activeCompanyId, setActiveCompanyId] = React.useState(
-    mockCompanies[0]?.id ?? "acme-ar",
-  );
+  useRequireDemoAuth();
+
+  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const company =
@@ -46,6 +47,7 @@ export default function PagosPage() {
               <Sidebar
                 activeKey="pagos"
                 onNavigate={onNavigate}
+                forceExpanded
                 footerCta={
                   <button
                     type="button"
@@ -66,7 +68,7 @@ export default function PagosPage() {
           <Topbar
             companies={mockCompanies}
             activeCompanyId={activeCompanyId}
-            onCompanyChange={(id) => setActiveCompanyId(id)}
+            onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 

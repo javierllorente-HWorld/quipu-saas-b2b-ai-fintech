@@ -113,6 +113,20 @@ export function IconBell(props: IconProps) {
   );
 }
 
+export function IconWallClock(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10Z" />
+      <path d="M12 7v5" />
+      <path d="M12 12l3 2" />
+      <path d="M12 5v.5" />
+      <path d="M12 18.5V19" />
+      <path d="M5 12h.5" />
+      <path d="M18.5 12h.5" />
+    </BaseIcon>
+  );
+}
+
 export function IconSearch(props: IconProps) {
   return (
     <BaseIcon {...props}>
@@ -145,6 +159,26 @@ export function IconX(props: IconProps) {
     <BaseIcon {...props}>
       <path d="M6 6l12 12" />
       <path d="M18 6 6 18" />
+    </BaseIcon>
+  );
+}
+
+export function IconUser(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
+      <path d="M20 20a8 8 0 1 0-16 0" />
+    </BaseIcon>
+  );
+}
+
+export function IconLogout(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M10 17l-1 3h11a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H9l1 3" />
+      <path d="M6 12h10" />
+      <path d="M6 12l3-3" />
+      <path d="M6 12l3 3" />
     </BaseIcon>
   );
 }

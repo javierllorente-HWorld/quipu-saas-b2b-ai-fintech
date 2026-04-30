@@ -4,22 +4,21 @@ import * as React from "react";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
 import { KpiRow } from "@/components/inicio/KpiRow";
-import { CashflowChart } from "@/components/inicio/CashflowChart";
-import { AlertsPanel } from "@/components/inicio/AlertsPanel";
 import { UpcomingTable } from "@/components/inicio/UpcomingTable";
-import { RecentActivity } from "@/components/inicio/RecentActivity";
-import { CopilotCard } from "@/components/inicio/CopilotCard";
 import {
   mockCompanies,
   mockDashboardByCompanyId,
 } from "@/components/inicio/mock";
-import { IconX } from "@/components/inicio/icons";
+import { IconSparkles, IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
+import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
+import { useRouter } from "next/navigation";
 
 export default function InicioPage() {
-  const [activeCompanyId, setActiveCompanyId] = React.useState(
-    mockCompanies[0]?.id ?? "acme-ar",
-  );
+  useRequireDemoAuth();
+
+  const router = useRouter();
+  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const company =
@@ -47,6 +46,7 @@ export default function InicioPage() {
               <Sidebar
                 activeKey="inicio"
                 onNavigate={onNavigate}
+                forceExpanded
                 footerCta={
                   <button
                     type="button"
@@ -67,7 +67,7 @@ export default function InicioPage() {
           <Topbar
             companies={mockCompanies}
             activeCompanyId={activeCompanyId}
-            onCompanyChange={(id) => setActiveCompanyId(id)}
+            onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
@@ -84,11 +84,13 @@ export default function InicioPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" className="qp-btn-secondary h-10 px-4">
-                      Exportar
-                    </button>
-                    <button type="button" className="qp-btn-primary h-10 px-4">
-                      Registrar movimiento
+                    <button
+                      type="button"
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[color:var(--quipu-accent)] px-5 text-sm font-medium text-white hover:opacity-95 active:translate-y-px"
+                      onClick={() => router.push("/ia")}
+                    >
+                      <IconSparkles className="size-4" />
+                      Copiloto Quipu
                     </button>
                   </div>
                 </div>
@@ -97,25 +99,7 @@ export default function InicioPage() {
               <section className="space-y-4">
                 <KpiRow kpis={data.kpis} currency={company.currency} />
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <CashflowChart points={data.cashflow} currency={company.currency} />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <AlertsPanel alerts={data.alerts} />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <UpcomingTable items={data.upcoming} currency={company.currency} />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <RecentActivity items={data.activity} currency={company.currency} />
-                  </div>
-                </div>
-
-                <CopilotCard suggestions={data.copilotSuggestions} />
+                <UpcomingTable items={data.upcoming} currency={company.currency} />
               </section>
             </div>
           </main>

@@ -20,9 +20,9 @@ function formatKpiValue(kpi: CashKpi, currency: CurrencyCode) {
 
 export function CajaKpiRow({ kpis, currency }: CajaKpiRowProps) {
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+    <div className="qp-kpi-row">
       {kpis.map((kpi) => {
-        const delta = kpi.deltaPct;
+        const delta = kpi.key === "connectedBanks" ? null : kpi.deltaPct;
         const deltaTone =
           delta == null
             ? "text-muted-foreground"
@@ -30,17 +30,15 @@ export function CajaKpiRow({ kpis, currency }: CajaKpiRowProps) {
               ? "text-emerald-600"
               : "text-rose-600";
 
-        const pill =
+        const rightIcon =
           kpi.key === "connectedBanks" ? (
-            <span className="inline-flex items-center gap-2 rounded-2xl bg-[color:var(--quipu-ice)] px-2.5 py-1 text-xs font-medium text-[color:var(--quipu-night)]">
-              <IconBank className="size-4" />
-              Conectados
+            <span
+              className="inline-flex size-10 items-center justify-center rounded-2xl bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)] ring-1 ring-black/5"
+              aria-hidden="true"
+            >
+              <IconBank className="size-5" />
             </span>
-          ) : (
-            <span className="rounded-2xl bg-[color:var(--quipu-ice)] px-2.5 py-1 text-xs font-medium text-[color:var(--quipu-night)]">
-              Hoy
-            </span>
-          );
+          ) : null;
 
         return (
           <div key={kpi.key} className="qp-card min-w-0">
@@ -50,16 +48,18 @@ export function CajaKpiRow({ kpis, currency }: CajaKpiRowProps) {
                   <div className="text-sm font-medium text-muted-foreground">
                     {kpi.label}
                   </div>
-                  <div className="mt-2 whitespace-nowrap text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                  <div className="qp-kpi-stat">
                     {formatKpiValue(kpi, currency)}
                   </div>
                 </div>
-                {pill}
+                {rightIcon}
               </div>
             </div>
             <div className="qp-card-content">
               <div className="flex items-center justify-between gap-3">
-                <div className="text-xs text-muted-foreground">{kpi.hint}</div>
+                <div className="text-xs text-muted-foreground">
+                  {kpi.key === "connectedBanks" ? null : kpi.hint}
+                </div>
                 {delta == null ? null : (
                   <div
                     className={`inline-flex items-center gap-1 text-xs font-semibold ${deltaTone}`}

@@ -16,7 +16,7 @@ export function SuggestedActions({ title, items }: SuggestedActionsProps) {
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Próximos pasos sugeridos (mock).
+              Próximos pasos sugeridos.
             </div>
           </div>
           <button

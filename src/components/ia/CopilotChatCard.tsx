@@ -84,13 +84,13 @@ export function CopilotChatCard({ title, messages }: CopilotChatCardProps) {
           <div className="flex items-center gap-2">
             <input
               className="qp-input h-10"
-              placeholder="Escribí tu consulta… (mock)"
+              placeholder="Escribí tu consulta…"
               disabled
             />
             <button
               type="button"
               className="inline-flex size-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground opacity-70"
-              aria-label="Enviar (mock)"
+              aria-label="Enviar"
               disabled
             >
               <SendIcon />

@@ -51,7 +51,7 @@ function KpiIcon({ kpiKey }: { kpiKey: IaKpi["key"] }) {
 
 export function IaKpiRow({ kpis, currency }: IaKpiRowProps) {
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+    <div className="qp-kpi-row">
       {kpis.map((kpi) => {
         const delta = kpi.deltaPct;
         const deltaTone =
@@ -69,7 +69,7 @@ export function IaKpiRow({ kpis, currency }: IaKpiRowProps) {
                   <div className="text-sm font-medium text-muted-foreground">
                     {kpi.label}
                   </div>
-                  <div className="mt-2 whitespace-nowrap text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                  <div className="qp-kpi-stat">
                     {formatKpiValue(kpi, currency)}
                   </div>
                 </div>

@@ -20,40 +20,9 @@ function formatKpiValue(kpi: TesoreriaKpi, currency: CurrencyCode) {
   return String(kpi.value);
 }
 
-function KpiIcon({ kpiKey }: { kpiKey: TesoreriaKpi["key"] }) {
-  const bg = (() => {
-    switch (kpiKey) {
-      case "posicionConsolidada":
-        return "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-      case "liquidez7d":
-        return "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-      case "bancosConectados":
-        return "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-      case "transferenciasHoy":
-        return "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-      case "exposicionPorBanco":
-        return "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-    }
-  })();
-
-  return (
-    <span
-      className={[
-        "inline-flex size-10 items-center justify-center rounded-2xl ring-1 ring-black/5",
-        bg,
-      ].join(" ")}
-      aria-hidden="true"
-    >
-      <span className="text-sm font-bold">
-        {kpiKey === "bancosConectados" ? "🏦" : "$"}
-      </span>
-    </span>
-  );
-}
-
 export function TesoreriaKpiRow({ kpis, currency }: TesoreriaKpiRowProps) {
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+    <div className="qp-kpi-row">
       {kpis.map((kpi) => {
         const delta = kpi.deltaPct;
         const deltaTone =
@@ -71,11 +40,10 @@ export function TesoreriaKpiRow({ kpis, currency }: TesoreriaKpiRowProps) {
                   <div className="text-sm font-medium text-muted-foreground">
                     {kpi.label}
                   </div>
-                  <div className="mt-2 whitespace-nowrap text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                  <div className="qp-kpi-stat">
                     {formatKpiValue(kpi, currency)}
                   </div>
                 </div>
-                <KpiIcon kpiKey={kpi.key} />
               </div>
             </div>
             <div className="qp-card-content">

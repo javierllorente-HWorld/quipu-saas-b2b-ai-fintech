@@ -13,12 +13,17 @@ import { BankBalancesTable } from "@/components/caja/BankBalancesTable";
 import { UpcomingMovementsTable } from "@/components/caja/UpcomingMovementsTable";
 import { RecentMovementsTable } from "@/components/caja/RecentMovementsTable";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
+import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
+import { RegisterMovementModal } from "@/components/shared/RegisterMovementModal";
+import { Toast } from "@/components/shared/Toast";
 
 export default function CajaPage() {
-  const [activeCompanyId, setActiveCompanyId] = React.useState(
-    mockCompanies[0]?.id ?? "acme-ar",
-  );
+  useRequireDemoAuth();
+
+  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [registerOpen, setRegisterOpen] = React.useState(false);
+  const [savedToast, setSavedToast] = React.useState(false);
 
   const company =
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
@@ -28,8 +33,15 @@ export default function CajaPage() {
     onAfterNavigate: () => setSidebarOpen(false),
   });
 
+  React.useEffect(() => {
+    if (!savedToast) return;
+    const t = window.setTimeout(() => setSavedToast(false), 2600);
+    return () => window.clearTimeout(t);
+  }, [savedToast]);
+
   return (
     <div className="qp-shell">
+      <Toast message="Movimiento registrado correctamente" show={savedToast} />
       <div className="min-h-screen bg-background md:flex">
         <div className="hidden md:block md:shrink-0">
           <Sidebar activeKey="caja" onNavigate={onNavigate} />
@@ -45,6 +57,7 @@ export default function CajaPage() {
               <Sidebar
                 activeKey="caja"
                 onNavigate={onNavigate}
+                forceExpanded
                 footerCta={
                   <button
                     type="button"
@@ -65,7 +78,7 @@ export default function CajaPage() {
           <Topbar
             companies={mockCompanies}
             activeCompanyId={activeCompanyId}
-            onCompanyChange={(id) => setActiveCompanyId(id)}
+            onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
@@ -85,7 +98,11 @@ export default function CajaPage() {
                     <button type="button" className="qp-btn-secondary h-10 px-4">
                       Exportar
                     </button>
-                    <button type="button" className="qp-btn-primary h-10 px-4">
+                    <button
+                      type="button"
+                      className="qp-btn-primary h-10 px-4"
+                      onClick={() => setRegisterOpen(true)}
+                    >
                       Registrar movimiento
                     </button>
                   </div>
@@ -129,6 +146,12 @@ export default function CajaPage() {
           </main>
         </div>
       </div>
+
+      <RegisterMovementModal
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        onSaved={() => setSavedToast(true)}
+      />
     </div>
   );
 }

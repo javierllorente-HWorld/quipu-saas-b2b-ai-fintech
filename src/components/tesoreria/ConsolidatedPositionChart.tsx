@@ -152,7 +152,7 @@ export function ConsolidatedPositionChart({
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Liquidez consolidada y visibilidad de corto plazo (mock).
+              Liquidez consolidada y visibilidad de corto plazo.
             </div>
           </div>
 

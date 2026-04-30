@@ -13,11 +13,12 @@ import { BankDistributionDonut } from "@/components/tesoreria/BankDistributionDo
 import { TreasuryBankBalancesTable } from "@/components/tesoreria/BankBalancesTable";
 import { ScheduledTransfersTable } from "@/components/tesoreria/ScheduledTransfersTable";
 import { TreasuryMovementsTable } from "@/components/tesoreria/TreasuryMovementsTable";
+import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 
 export default function TesoreriaPage() {
-  const [activeCompanyId, setActiveCompanyId] = React.useState(
-    mockCompanies[0]?.id ?? "acme-ar",
-  );
+  useRequireDemoAuth();
+
+  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const company =
@@ -46,6 +47,7 @@ export default function TesoreriaPage() {
               <Sidebar
                 activeKey="tesoreria"
                 onNavigate={onNavigate}
+                forceExpanded
                 footerCta={
                   <button
                     type="button"
@@ -66,7 +68,7 @@ export default function TesoreriaPage() {
           <Topbar
             companies={mockCompanies}
             activeCompanyId={activeCompanyId}
-            onCompanyChange={(id) => setActiveCompanyId(id)}
+            onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 

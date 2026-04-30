@@ -142,7 +142,7 @@ export function IncomeExpenseChart({ title, datasets, currency }: IncomeExpenseC
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Evolución y proyección de ingresos/egresos (mock).
+              Evolución y proyección de ingresos/egresos.
             </div>
           </div>
 

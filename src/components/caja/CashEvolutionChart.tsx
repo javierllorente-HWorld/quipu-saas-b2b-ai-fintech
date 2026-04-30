@@ -69,7 +69,7 @@ export function CashEvolutionChart({ points, currency }: CashEvolutionChartProps
               Evolución diaria de caja
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Saldo real vs proyección (mock).
+              Saldo real vs proyección.
             </div>
           </div>
 

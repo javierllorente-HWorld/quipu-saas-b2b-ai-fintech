@@ -63,7 +63,7 @@ export function ProfitabilityChart({ title, points }: ProfitabilityChartProps) {
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Márgenes operativos y netos (mock).
+              Márgenes operativos y netos.
             </div>
           </div>
         </div>

@@ -95,7 +95,7 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
               Distribución de caja
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Cómo está compuesto tu saldo disponible (mock).
+              Cómo está compuesto tu saldo disponible.
             </div>
           </div>
         </div>

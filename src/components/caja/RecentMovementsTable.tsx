@@ -20,7 +20,7 @@ export function RecentMovementsTable({ items, currency }: RecentMovementsTablePr
               Movimientos recientes
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Últimas operaciones registradas (mock).
+              Últimas operaciones registradas.
             </div>
           </div>
           <button
