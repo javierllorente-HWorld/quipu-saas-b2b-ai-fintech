@@ -11,10 +11,11 @@ export type KpiRowProps = {
 };
 
 export function KpiRow({ kpis, currency }: KpiRowProps) {
+  const showDeltaForKeys = React.useMemo(() => new Set(["netFlow", "income"]), []);
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+    <div className="qp-kpi-row">
       {kpis.map((kpi) => {
-        const delta = kpi.deltaPct;
+        const delta = showDeltaForKeys.has(kpi.key) ? kpi.deltaPct : null;
         const deltaTone =
           delta == null
             ? "text-muted-foreground"
@@ -30,13 +31,10 @@ export function KpiRow({ kpis, currency }: KpiRowProps) {
                   <div className="text-sm font-medium text-muted-foreground">
                     {kpi.label}
                   </div>
-                  <div className="mt-2 whitespace-nowrap text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                  <div className="qp-kpi-stat">
                     {formatMoney(kpi.value, currency)}
                   </div>
                 </div>
-                <span className="rounded-2xl bg-[color:var(--quipu-ice)] px-2.5 py-1 text-xs font-medium text-[color:var(--quipu-night)]">
-                  Hoy
-                </span>
               </div>
             </div>
             <div className="qp-card-content">

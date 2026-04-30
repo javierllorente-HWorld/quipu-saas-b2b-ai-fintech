@@ -16,7 +16,7 @@ export function OpportunitiesPanel({ title, items }: OpportunitiesPanelProps) {
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Recomendaciones priorizadas (mock).
+              Recomendaciones priorizadas.
             </div>
           </div>
           <button

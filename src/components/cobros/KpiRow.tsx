@@ -24,40 +24,9 @@ function formatKpiValue(kpi: CobrosKpi, currency: CurrencyCode) {
   }
 }
 
-function KpiIcon({ kpiKey }: { kpiKey: CobrosKpi["key"] }) {
-  const bg = (() => {
-    switch (kpiKey) {
-      case "totalPorCobrar":
-        return "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-      case "vencido":
-        return "bg-rose-50 text-rose-700";
-      case "cobradoMes":
-        return "bg-emerald-50 text-emerald-700";
-      case "tasaCobranza":
-        return "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-      case "facturasPendientes":
-        return "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-    }
-  })();
-
-  return (
-    <span
-      className={[
-        "inline-flex size-10 items-center justify-center rounded-2xl ring-1 ring-black/5",
-        bg,
-      ].join(" ")}
-      aria-hidden="true"
-    >
-      <span className="text-sm font-bold">
-        {kpiKey === "tasaCobranza" ? "%" : "$"}
-      </span>
-    </span>
-  );
-}
-
 export function CobrosKpiRow({ kpis, currency }: CobrosKpiRowProps) {
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+    <div className="qp-kpi-row">
       {kpis.map((kpi) => {
         const delta = kpi.deltaPct;
         const deltaTone =
@@ -75,11 +44,10 @@ export function CobrosKpiRow({ kpis, currency }: CobrosKpiRowProps) {
                   <div className="text-sm font-medium text-muted-foreground">
                     {kpi.label}
                   </div>
-                  <div className="mt-2 whitespace-nowrap text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                  <div className="qp-kpi-stat">
                     {formatKpiValue(kpi, currency)}
                   </div>
                 </div>
-                <KpiIcon kpiKey={kpi.key} />
               </div>
             </div>
             <div className="qp-card-content">

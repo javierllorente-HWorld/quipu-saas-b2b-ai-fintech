@@ -1,3 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { isDemoAuthed, signInDemo } from "@/lib/demoAuth";
+
 function BenefitIcon({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex size-9 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
@@ -7,6 +14,28 @@ function BenefitIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (isDemoAuthed()) {
+      router.replace("/inicio");
+    }
+  }, [router]);
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const res = signInDemo(email, password);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    router.push("/inicio");
+  }
+
   return (
     <div className="qp-shell">
       <div className="min-h-screen md:grid md:grid-cols-2">
@@ -165,7 +194,7 @@ export default function LoginPage() {
               </div>
 
               <div className="qp-card-content">
-                <form className="space-y-4" action="#" method="post">
+                <form className="space-y-4" onSubmit={onSubmit}>
                   <div className="space-y-2">
                     <label className="qp-label" htmlFor="email">
                       Email
@@ -177,6 +206,8 @@ export default function LoginPage() {
                       placeholder="tu@email.com"
                       className="qp-input"
                       autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
 
@@ -191,8 +222,16 @@ export default function LoginPage() {
                       placeholder="••••••••"
                       className="qp-input"
                       autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
+
+                  {error ? (
+                    <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-700">
+                      {error}
+                    </div>
+                  ) : null}
 
                   <div className="flex items-center justify-between gap-4 pt-1">
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -211,7 +250,7 @@ export default function LoginPage() {
                     </a>
                   </div>
 
-                  <button type="button" className="qp-btn-primary w-full">
+                  <button type="submit" className="qp-btn-primary w-full">
                     Ingresar
                   </button>
 

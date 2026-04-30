@@ -10,6 +10,17 @@ export type UpcomingTableProps = {
 };
 
 export function UpcomingTable({ items, currency }: UpcomingTableProps) {
+  const pageSize = 5;
+  const [page, setPage] = React.useState(0);
+  const totalPages = Math.ceil(items.length / pageSize);
+  const safeTotalPages = Math.max(1, totalPages);
+  const pageItems = items.slice(page * pageSize, (page + 1) * pageSize);
+
+  React.useEffect(() => {
+    if (page <= safeTotalPages - 1) return;
+    setPage(Math.max(0, safeTotalPages - 1));
+  }, [page, safeTotalPages]);
+
   return (
     <div className="qp-card">
       <div className="qp-card-header">
@@ -18,16 +29,7 @@ export function UpcomingTable({ items, currency }: UpcomingTableProps) {
             <div className="text-base font-semibold tracking-tight">
               Próximos cobros y pagos
             </div>
-            <div className="mt-1 text-sm text-muted-foreground">
-              Calendario inmediato para anticiparte.
-            </div>
           </div>
-          <button
-            type="button"
-            className="qp-btn-ghost h-9 px-4 text-[color:var(--primary)] hover:bg-[color:var(--quipu-ice)]"
-          >
-            Ver todo
-          </button>
         </div>
       </div>
       <div className="qp-card-content">
@@ -35,18 +37,22 @@ export function UpcomingTable({ items, currency }: UpcomingTableProps) {
           <table className="min-w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">
               <tr className="border-b border-border">
+                <th className="py-3 pr-4 font-medium">Fecha</th>
                 <th className="py-3 pr-4 font-medium">Tipo</th>
                 <th className="py-3 pr-4 font-medium">Descripción</th>
-                <th className="py-3 pr-4 font-medium">Fecha</th>
                 <th className="py-3 pr-4 font-medium">Cliente/Proveedor</th>
                 <th className="py-3 pl-2 text-right font-medium">Monto</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {items.map((row) => {
+              {pageItems.map((row) => {
                 const isCobro = row.type === "Cobro";
+                const signedAmount = isCobro ? row.amount : -row.amount;
                 return (
                   <tr key={row.id} className="hover:bg-black/[0.02]">
+                    <td className="py-3 pr-4 text-muted-foreground">
+                      {formatShortDate(row.date)}
+                    </td>
                     <td className="py-3 pr-4">
                       <span
                         className={[
@@ -63,13 +69,10 @@ export function UpcomingTable({ items, currency }: UpcomingTableProps) {
                       {row.description}
                     </td>
                     <td className="py-3 pr-4 text-muted-foreground">
-                      {formatShortDate(row.date)}
-                    </td>
-                    <td className="py-3 pr-4 text-muted-foreground">
                       {row.counterparty}
                     </td>
                     <td className="py-3 pl-2 text-right font-semibold text-foreground">
-                      {formatMoney(row.amount, currency)}
+                      {formatMoney(signedAmount, currency)}
                     </td>
                   </tr>
                 );
@@ -77,6 +80,27 @@ export function UpcomingTable({ items, currency }: UpcomingTableProps) {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 ? (
+          <div className="mt-4 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              className="qp-btn-secondary h-9 px-3 text-xs"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              className="qp-btn-secondary h-9 px-3 text-xs"
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+            >
+              Siguiente
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

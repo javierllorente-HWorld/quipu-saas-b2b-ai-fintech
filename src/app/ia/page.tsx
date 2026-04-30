@@ -3,27 +3,27 @@
 import * as React from "react";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
-import { mockCompanies } from "@/components/inicio/mock";
+import { mockCompanies, mockDashboardByCompanyId } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { mockCopilotByCompanyId } from "@/components/ia/mock";
-import { IaKpiRow } from "@/components/ia/KpiRow";
-import { CopilotChatCard } from "@/components/ia/CopilotChatCard";
+import { CopilotCard } from "@/components/inicio/CopilotCard";
 import { FinancialHealthSummary } from "@/components/ia/FinancialHealthSummary";
 import { OpportunitiesPanel } from "@/components/ia/OpportunitiesPanel";
-import { RecommendedQuestions } from "@/components/ia/RecommendedQuestions";
 import { SmartAlerts } from "@/components/ia/SmartAlerts";
 import { SuggestedActions } from "@/components/ia/SuggestedActions";
 import { ModuleRecommendations } from "@/components/ia/ModuleRecommendations";
+import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 
 export default function IaPage() {
-  const [activeCompanyId, setActiveCompanyId] = React.useState(
-    mockCompanies[0]?.id ?? "acme-ar",
-  );
+  useRequireDemoAuth();
+
+  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const company =
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
+  const inicioData = mockDashboardByCompanyId[company.id] ?? mockDashboardByCompanyId["acme-ar"];
   const data =
     mockCopilotByCompanyId[company.id] ?? mockCopilotByCompanyId["acme-ar"];
 
@@ -48,6 +48,7 @@ export default function IaPage() {
               <Sidebar
                 activeKey="ia"
                 onNavigate={onNavigate}
+                forceExpanded
                 footerCta={
                   <button
                     type="button"
@@ -68,7 +69,7 @@ export default function IaPage() {
           <Topbar
             companies={mockCompanies}
             activeCompanyId={activeCompanyId}
-            onCompanyChange={(id) => setActiveCompanyId(id)}
+            onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
@@ -82,42 +83,28 @@ export default function IaPage() {
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Tu copiloto financiero para entender salud, riesgos y
-                      oportunidades. (Mock)
+                      oportunidades.
                     </p>
                   </div>
                 </div>
               </header>
 
               <section className="space-y-4">
-                <IaKpiRow kpis={data.kpis} currency={company.currency} />
+                <CopilotCard suggestions={inicioData.copilotSuggestions} />
 
-                <div className="grid gap-4 lg:grid-cols-12">
-                  <div className="lg:col-span-8">
-                    <CopilotChatCard
-                      title="Chat con Copiloto Quipu"
-                      messages={data.chat.messages}
-                    />
-                  </div>
-                  <div className="lg:col-span-4">
-                    <div className="space-y-4">
-                      <FinancialHealthSummary
-                        title="Resumen financiero (últimos 30 días)"
-                        items={data.healthSummary}
-                        currency={company.currency}
-                      />
-                      <OpportunitiesPanel
-                        title="Sugerencias / oportunidades"
-                        items={data.opportunities}
-                      />
-                    </div>
-                  </div>
+                <div className="space-y-4">
+                  <FinancialHealthSummary
+                    title="Resumen financiero (últimos 30 días)"
+                    items={data.healthSummary}
+                    currency={company.currency}
+                  />
+                  <OpportunitiesPanel
+                    title="Sugerencias / oportunidades"
+                    items={data.opportunities}
+                  />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <RecommendedQuestions
-                    title="Preguntas recomendadas"
-                    items={data.recommendedQuestions}
-                  />
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
                   <SmartAlerts title="Alertas inteligentes" items={data.smartAlerts} />
                   <SuggestedActions title="Acciones sugeridas" items={data.suggestedActions} />
                 </div>

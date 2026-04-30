@@ -46,7 +46,7 @@ export function ModuleRecommendations({ title, tabs }: ModuleRecommendationsProp
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Recomendaciones simples por área (mock).
+              Recomendaciones simples por área.
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">

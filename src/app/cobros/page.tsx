@@ -14,11 +14,12 @@ import { CollectionsAlerts } from "@/components/cobros/CollectionsAlerts";
 import { CustomersReceivableTable } from "@/components/cobros/CustomersReceivableTable";
 import { InvoicesPendingTable } from "@/components/cobros/InvoicesPendingTable";
 import { RecentCollectionsActivity } from "@/components/cobros/RecentCollectionsActivity";
+import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 
 export default function CobrosPage() {
-  const [activeCompanyId, setActiveCompanyId] = React.useState(
-    mockCompanies[0]?.id ?? "acme-ar",
-  );
+  useRequireDemoAuth();
+
+  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const company =
@@ -47,6 +48,7 @@ export default function CobrosPage() {
               <Sidebar
                 activeKey="cobros"
                 onNavigate={onNavigate}
+                forceExpanded
                 footerCta={
                   <button
                     type="button"
@@ -67,7 +69,7 @@ export default function CobrosPage() {
           <Topbar
             companies={mockCompanies}
             activeCompanyId={activeCompanyId}
-            onCompanyChange={(id) => setActiveCompanyId(id)}
+            onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 

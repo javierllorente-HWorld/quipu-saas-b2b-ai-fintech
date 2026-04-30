@@ -72,7 +72,7 @@ export function CashflowChart({ points, currency }: CashflowChartProps) {
               Flujo de caja
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Ingresos, egresos y saldo acumulado (mock).
+              Resumen de ingresos y egresos recientes.
             </div>
           </div>
           {latest ? (
@@ -158,8 +158,8 @@ export function CashflowChart({ points, currency }: CashflowChartProps) {
         </div>
 
         <div className="mt-3 flex justify-between text-xs text-muted-foreground">
-          <span>{points[0]?.label}</span>
-          <span>{points.at(-1)?.label}</span>
+          <span>Últimos 6 meses</span>
+          <span />
         </div>
       </div>
     </div>

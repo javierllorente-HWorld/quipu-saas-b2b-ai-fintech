@@ -102,7 +102,7 @@ export function PaymentsCalendarChart({
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Pagos programados, pagados y vencidos (mock).
+              Pagos programados, pagados y vencidos.
             </div>
           </div>
 

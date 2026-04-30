@@ -20,7 +20,7 @@ export function BankBalancesTable({ items, currency }: BankBalancesTableProps) {
               Saldos por banco
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Distribución de saldo por cuenta (mock).
+              Distribución de saldo por cuenta.
             </div>
           </div>
           <button

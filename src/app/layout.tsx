@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   },
   description:
     "SaaS B2B fintech para gestión financiera de pymes en LATAM: caja, cobros, pagos, reportes y proyecciones.",
+  icons: {
+    icon: "/favicon-quipu.png",
+  },
 };
 
 export default function RootLayout({

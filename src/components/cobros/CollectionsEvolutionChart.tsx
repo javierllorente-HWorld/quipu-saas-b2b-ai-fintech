@@ -121,7 +121,7 @@ export function CollectionsEvolutionChart({ points, currency }: CollectionsEvolu
           <div>
             <div className="text-base font-semibold tracking-tight">Evolución de cobros</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Cobrado vs meta (mock).
+              Cobrado vs meta.
             </div>
           </div>
 

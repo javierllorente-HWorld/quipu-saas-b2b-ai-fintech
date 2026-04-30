@@ -17,39 +17,9 @@ function formatKpiValue(kpi: ReportesKpi, currency: CurrencyCode) {
     : `${kpi.value.toFixed(1)}%`;
 }
 
-function KpiIcon({ kpiKey }: { kpiKey: ReportesKpi["key"] }) {
-  const bg = "bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)]";
-  const glyph = (() => {
-    switch (kpiKey) {
-      case "ingresosYtd":
-        return "↗";
-      case "egresosYtd":
-        return "↘";
-      case "margenOperativo":
-        return "%";
-      case "ebitda":
-        return "E";
-      case "variacionMensual":
-        return "Δ";
-    }
-  })();
-
-  return (
-    <span
-      className={[
-        "inline-flex size-10 items-center justify-center rounded-2xl ring-1 ring-black/5",
-        bg,
-      ].join(" ")}
-      aria-hidden="true"
-    >
-      <span className="text-sm font-bold">{glyph}</span>
-    </span>
-  );
-}
-
 export function ReportesKpiRow({ kpis, currency }: ReportesKpiRowProps) {
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+    <div className="qp-kpi-row">
       {kpis.map((kpi) => {
         const delta = kpi.deltaPct;
         const deltaTone =
@@ -67,11 +37,10 @@ export function ReportesKpiRow({ kpis, currency }: ReportesKpiRowProps) {
                   <div className="text-sm font-medium text-muted-foreground">
                     {kpi.label}
                   </div>
-                  <div className="mt-2 whitespace-nowrap text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                  <div className="qp-kpi-stat">
                     {formatKpiValue(kpi, currency)}
                   </div>
                 </div>
-                <KpiIcon kpiKey={kpi.key} />
               </div>
             </div>
             <div className="qp-card-content">

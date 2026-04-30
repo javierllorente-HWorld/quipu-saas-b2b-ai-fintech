@@ -132,13 +132,6 @@ export const mockCashByCompanyId: Record<string, CashPageData> = {
         deltaPct: 9.6,
         hint: "Saldo esperado",
       },
-      {
-        key: "connectedBanks",
-        label: "Bancos conectados",
-        value: 5,
-        deltaPct: 0.0,
-        hint: "Actualizado hace 5 min",
-      },
     ],
     evolution: buildEvolution({
       startBalance: 23200000,
@@ -272,13 +265,6 @@ export const mockCashByCompanyId: Record<string, CashPageData> = {
         value: 143100,
         deltaPct: 3.7,
         hint: "Expected balance",
-      },
-      {
-        key: "connectedBanks",
-        label: "Bancos conectados",
-        value: 3,
-        deltaPct: 0,
-        hint: "Updated 7 min ago",
       },
     ],
     evolution: buildEvolution({

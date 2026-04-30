@@ -62,6 +62,43 @@ body {
     text-decoration: none;
   }
 
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  a[href] {
+    cursor: pointer;
+  }
+
+  select,
+  option {
+    cursor: pointer;
+  }
+
+  label[for] {
+    cursor: pointer;
+  }
+
+  summary {
+    cursor: pointer;
+  }
+
+  input:not([type="button"]):not([type="submit"]):not([type="reset"]):not(
+      [type="checkbox"]
+    ):not([type="radio"]):not([type="range"]),
+  textarea {
+    cursor: text;
+  }
+
+  input:disabled,
+  textarea:disabled,
+  select:disabled,
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
   :focus-visible {
     outline: 0;
     box-shadow: 0 0 0 4px var(--ring);
@@ -110,26 +147,49 @@ body {
     @apply px-6 pb-6;
   }
 
+  /* KPI strip: 1 col mobile, 3 cols tablet (3+2), 5 cols wide desktop */
+  .qp-kpi-row {
+    @apply grid min-w-0 grid-cols-1 gap-3;
+    @apply md:grid-cols-3 md:gap-3;
+    @apply xl:grid-cols-5 xl:gap-1.5;
+  }
+
+  .qp-kpi-row > .qp-card {
+    @apply min-w-0;
+  }
+
+  .qp-kpi-row .qp-card-header {
+    @apply xl:px-4 xl:pt-4;
+  }
+
+  .qp-kpi-row .qp-card-content {
+    @apply xl:px-4 xl:pb-4;
+  }
+
+  .qp-kpi-row .qp-kpi-stat {
+    @apply mt-2 whitespace-nowrap text-2xl font-semibold tabular-nums tracking-tight text-foreground xl:text-xl 2xl:text-2xl;
+  }
+
   /* Buttons */
   .qp-btn {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium transition active:translate-y-px disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-medium transition active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .qp-btn-primary {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:opacity-90 active:translate-y-px disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:opacity-90 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .qp-btn-secondary {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-medium text-foreground transition hover:bg-white/70 active:translate-y-px disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-medium text-foreground transition hover:bg-white/70 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .qp-btn-ghost {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full bg-transparent px-5 text-sm font-medium text-foreground transition hover:bg-black/5 active:translate-y-px disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-transparent px-5 text-sm font-medium text-foreground transition hover:bg-black/5 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   /* Inputs */
   .qp-input {
-    @apply h-11 w-full rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground placeholder:text-muted-foreground transition;
+    @apply h-11 w-full cursor-text rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground placeholder:text-muted-foreground transition disabled:cursor-not-allowed;
   }
 
   .qp-input:focus {

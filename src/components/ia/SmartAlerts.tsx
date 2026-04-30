@@ -31,7 +31,7 @@ export function SmartAlerts({ title, items }: SmartAlertsProps) {
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Alertas simplificadas (mock).
+              Alertas simplificadas.
             </div>
           </div>
           <button
