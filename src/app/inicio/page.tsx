@@ -80,7 +80,7 @@ export default function InicioPage() {
                       Inicio
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Resumen de salud financiera — {company.name}
+                      Resumen de salud financiera
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

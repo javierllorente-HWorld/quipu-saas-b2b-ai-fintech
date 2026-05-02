@@ -11,26 +11,28 @@ export function CopilotCard({ suggestions }: CopilotCardProps) {
   const [value, setValue] = React.useState("");
 
   return (
-    <div className="rounded-[var(--radius-lg)] border border-white/10 bg-[color:var(--quipu-night)] text-white shadow-[0_18px_40px_rgba(7,27,74,0.22)]">
-      <div className="px-6 pt-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold ring-1 ring-white/15">
+    <div className="flex min-h-0 flex-1 flex-col rounded-[var(--radius-lg)] border border-white/10 bg-[color:var(--quipu-night)] text-white shadow-[0_18px_40px_rgba(7,27,74,0.22)]">
+      <div className="shrink-0 px-6 pt-6">
+        <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
+              Chateá con tu copiloto financiero
+            </div>
+            <div className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold ring-1 ring-white/15">
               <IconSparkles className="size-4" />
               Copiloto Quipu
             </div>
-            <div className="mt-3 text-xl font-semibold tracking-tight">
-              Preguntale a tu caja.
-            </div>
-            <div className="mt-1 text-sm text-white/70">
-              Consultas inteligentes para decidir mejor.
-            </div>
+          </div>
+          <div className="mt-1 text-sm text-white/70">
+            Hacé preguntas, recibí alertas, recomendaciones y ayuda para tomar decisiones.
           </div>
         </div>
       </div>
 
-      <div className="px-6 pb-6">
-        <div className="mt-5 flex flex-wrap gap-2">
+      <div className="min-h-0 flex-1 basis-0" aria-hidden="true" />
+
+      <div className="shrink-0 px-6 pb-6">
+        <div className="flex flex-wrap gap-2">
           {suggestions
             .filter((q) => q !== "Proyectá mi saldo a 30 días.")
             .slice(0, 4)
@@ -69,4 +71,3 @@ export function CopilotCard({ suggestions }: CopilotCardProps) {
     </div>
   );
 }
-

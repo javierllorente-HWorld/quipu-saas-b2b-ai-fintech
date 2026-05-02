@@ -1,9 +1,6 @@
-import type { CurrencyCode } from "@/components/inicio/mock";
-
 export type CashKpiKey =
   | "totalAvailable"
   | "availableToday"
-  | "weeklyNetFlow"
   | "projection30d"
   | "connectedBanks";
 
@@ -105,6 +102,13 @@ export const mockCashByCompanyId: Record<string, CashPageData> = {
   "acme-ar": {
     kpis: [
       {
+        key: "availableToday",
+        label: "Disponible inmediato",
+        value: 18975300,
+        deltaPct: 8.7,
+        hint: "Liquidez inmediata",
+      },
+      {
         key: "totalAvailable",
         label: "Saldo total disponible",
         value: 28458750,
@@ -112,22 +116,8 @@ export const mockCashByCompanyId: Record<string, CashPageData> = {
         hint: "En bancos + caja",
       },
       {
-        key: "availableToday",
-        label: "Disponible hoy",
-        value: 18975300,
-        deltaPct: 8.7,
-        hint: "Liquidez inmediata",
-      },
-      {
-        key: "weeklyNetFlow",
-        label: "Flujo neto semanal",
-        value: 4860200,
-        deltaPct: 15.2,
-        hint: "vs. semana ant.",
-      },
-      {
         key: "projection30d",
-        label: "Proyección 30 días",
+        label: "Saldo proyectado 30 días",
         value: 36210000,
         deltaPct: 9.6,
         hint: "Saldo esperado",
@@ -239,6 +229,13 @@ export const mockCashByCompanyId: Record<string, CashPageData> = {
   "north-us": {
     kpis: [
       {
+        key: "availableToday",
+        label: "Disponible inmediato",
+        value: 84250,
+        deltaPct: 2.0,
+        hint: "Immediate liquidity",
+      },
+      {
         key: "totalAvailable",
         label: "Saldo total disponible",
         value: 126430,
@@ -246,22 +243,8 @@ export const mockCashByCompanyId: Record<string, CashPageData> = {
         hint: "Across accounts",
       },
       {
-        key: "availableToday",
-        label: "Disponible hoy",
-        value: 84250,
-        deltaPct: 2.0,
-        hint: "Immediate liquidity",
-      },
-      {
-        key: "weeklyNetFlow",
-        label: "Flujo neto semanal",
-        value: 16420,
-        deltaPct: -1.8,
-        hint: "vs. last week",
-      },
-      {
         key: "projection30d",
-        label: "Proyección 30 días",
+        label: "Saldo proyectado 30 días",
         value: 143100,
         deltaPct: 3.7,
         hint: "Expected balance",

@@ -9,17 +9,18 @@ import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { mockPagosByCompanyId } from "@/components/pagos/mock";
 import { PagosKpiRow } from "@/components/pagos/KpiRow";
 import { PaymentsCalendarChart } from "@/components/pagos/PaymentsCalendarChart";
-import { AlertsApprovals } from "@/components/pagos/AlertsApprovals";
 import { UpcomingPaymentsTable } from "@/components/pagos/UpcomingPaymentsTable";
 import { VendorsTable } from "@/components/pagos/VendorsTable";
 import { RecentPaymentsTable } from "@/components/pagos/RecentPaymentsTable";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
+import { ProgramarPagoModal } from "@/components/shared/ProgramarPagoModal";
 
 export default function PagosPage() {
   useRequireDemoAuth();
 
   const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [pagoModalOpen, setPagoModalOpen] = React.useState(false);
 
   const company =
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
@@ -81,9 +82,17 @@ export default function PagosPage() {
                       Pagos
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Centralizá pagos a proveedores, vencimientos y aprobaciones.
-                      Programá pagos sin perder control del calendario.
+                      Pagos a proveedores, vencimientos y aprobaciones.
                     </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white transition hover:opacity-95 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => setPagoModalOpen(true)}
+                    >
+                      Programar pago
+                    </button>
                   </div>
                 </div>
               </header>
@@ -91,18 +100,11 @@ export default function PagosPage() {
               <section className="space-y-4">
                 <PagosKpiRow kpis={data.kpis} currency={company.currency} />
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <PaymentsCalendarChart
-                      title="Calendario de pagos"
-                      points={data.calendar.points}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <AlertsApprovals title="Alertas y aprobaciones" items={data.alerts} />
-                  </div>
-                </div>
+                <PaymentsCalendarChart
+                  title="Calendario de pagos"
+                  points={data.calendar.points}
+                  currency={company.currency}
+                />
 
                 <div className="grid gap-4 lg:grid-cols-3">
                   <div className="lg:col-span-1">
@@ -127,15 +129,13 @@ export default function PagosPage() {
                     />
                   </div>
                 </div>
-
-                <div className="pt-2 text-center text-xs text-muted-foreground">
-                  Los datos se actualizan en tiempo real desde tus bancos conectados.
-                </div>
               </section>
             </div>
           </main>
         </div>
       </div>
+
+      <ProgramarPagoModal open={pagoModalOpen} onClose={() => setPagoModalOpen(false)} />
     </div>
   );
 }

@@ -4,7 +4,6 @@ export type ReportesKpiKey =
   | "ingresosYtd"
   | "egresosYtd"
   | "margenOperativo"
-  | "ebitda"
   | "variacionMensual";
 
 export type ReportesKpi = {
@@ -16,14 +15,14 @@ export type ReportesKpi = {
   hint?: string;
 };
 
-export type IncomeExpenseRangeKey = "YTD" | "6M" | "12M" | "Mensual";
+export type IncomeExpenseRangeKey = "YTD" | "6M" | "12M";
 
 export type IncomeExpensePoint = {
   label: string; // e.g. Ene
   ingresos: number;
   egresos: number;
-  proyeccionIngresos: number;
-  proyeccionEgresos: number;
+  proyeccionIngresos?: number;
+  proyeccionEgresos?: number;
 };
 
 export type IncomeExpenseDataset = {
@@ -100,13 +99,6 @@ const twelveMonthsAr: IncomeExpensePoint[] = [
   ...ytdPointsAr.slice(0, 7),
 ];
 
-const monthlyAr: IncomeExpensePoint[] = [
-  { label: "Sem 1", ingresos: 5200000, egresos: 3680000, proyeccionIngresos: 5600000, proyeccionEgresos: 3920000 },
-  { label: "Sem 2", ingresos: 5480000, egresos: 3820000, proyeccionIngresos: 5850000, proyeccionEgresos: 4060000 },
-  { label: "Sem 3", ingresos: 5720000, egresos: 3980000, proyeccionIngresos: 6080000, proyeccionEgresos: 4200000 },
-  { label: "Sem 4", ingresos: 5880000, egresos: 4140000, proyeccionIngresos: 6240000, proyeccionEgresos: 4350000 },
-];
-
 const profitabilityAr: ProfitabilityPoint[] = [
   { label: "Ene", margenOperativoPct: 28.4, margenNetoPct: 17.1 },
   { label: "Feb", margenOperativoPct: 27.8, margenNetoPct: 16.7 },
@@ -145,19 +137,10 @@ const acme: ReportesDashboardData = {
       hint: "vs. mismo período ant.",
     },
     {
-      key: "ebitda",
-      label: "EBITDA",
-      format: "money",
-      value: 45230600,
-      deltaPct: 18.6,
-      hint: "vs. mismo período ant.",
-    },
-    {
       key: "variacionMensual",
       label: "Variación mensual",
       format: "percent",
       value: 6.3,
-      deltaPct: 0,
       hint: "vs. mes anterior",
     },
   ],
@@ -166,7 +149,6 @@ const acme: ReportesDashboardData = {
       { key: "YTD", points: ytdPointsAr },
       { key: "6M", points: sixMonthsAr },
       { key: "12M", points: twelveMonthsAr },
-      { key: "Mensual", points: monthlyAr },
     ],
   },
   profitability: {
@@ -288,8 +270,7 @@ const northwind: ReportesDashboardData = {
     { key: "ingresosYtd", label: "Ingresos YTD", format: "money", value: 965000, deltaPct: 6.2, hint: "vs prev. period" },
     { key: "egresosYtd", label: "Egresos YTD", format: "money", value: 712000, deltaPct: -3.4, hint: "vs prev. period" },
     { key: "margenOperativo", label: "Margen operativo", format: "percent", value: 26.2, deltaPct: 1.1, hint: "vs prev. period" },
-    { key: "ebitda", label: "EBITDA", format: "money", value: 182400, deltaPct: 4.8, hint: "vs prev. period" },
-    { key: "variacionMensual", label: "Variación mensual", format: "percent", value: 3.9, deltaPct: 0, hint: "vs last month" },
+    { key: "variacionMensual", label: "Variación mensual", format: "percent", value: 3.9, hint: "vs last month" },
   ],
   incomeExpense: {
     datasets: [
@@ -330,15 +311,6 @@ const northwind: ReportesDashboardData = {
           { label: "Apr", ingresos: 97200, egresos: 71500, proyeccionIngresos: 102000, proyeccionEgresos: 76000 },
           { label: "May", ingresos: 98500, egresos: 72800, proyeccionIngresos: 104000, proyeccionEgresos: 78000 },
           { label: "Jun", ingresos: 101200, egresos: 74200, proyeccionIngresos: 106000, proyeccionEgresos: 80000 },
-        ],
-      },
-      {
-        key: "Mensual",
-        points: [
-          { label: "W1", ingresos: 24000, egresos: 17500, proyeccionIngresos: 26000, proyeccionEgresos: 18800 },
-          { label: "W2", ingresos: 25200, egresos: 18200, proyeccionIngresos: 27200, proyeccionEgresos: 19500 },
-          { label: "W3", ingresos: 26100, egresos: 19000, proyeccionIngresos: 28000, proyeccionEgresos: 20200 },
-          { label: "W4", ingresos: 27000, egresos: 19500, proyeccionIngresos: 28800, proyeccionEgresos: 20800 },
         ],
       },
     ],

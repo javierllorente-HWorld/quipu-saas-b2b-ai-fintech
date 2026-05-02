@@ -9,18 +9,17 @@ import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { mockCobrosByCompanyId } from "@/components/cobros/mock";
 import { CobrosKpiRow } from "@/components/cobros/KpiRow";
 import { DebtAgingDonut } from "@/components/cobros/DebtAgingDonut";
-import { CollectionsEvolutionChart } from "@/components/cobros/CollectionsEvolutionChart";
-import { CollectionsAlerts } from "@/components/cobros/CollectionsAlerts";
 import { CustomersReceivableTable } from "@/components/cobros/CustomersReceivableTable";
 import { InvoicesPendingTable } from "@/components/cobros/InvoicesPendingTable";
-import { RecentCollectionsActivity } from "@/components/cobros/RecentCollectionsActivity";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
+import { RegisterCobroModal } from "@/components/shared/RegisterCobroModal";
 
 export default function CobrosPage() {
   useRequireDemoAuth();
 
   const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [cobroModalOpen, setCobroModalOpen] = React.useState(false);
 
   const company =
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
@@ -82,9 +81,17 @@ export default function CobrosPage() {
                       Cobros
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Gestión cuentas por cobrar, facturas pendientes y seguimiento a
-                      clientes. Priorizá vencidos y acelerá la cobranza.
+                      Cuentas por cobrar, facturas pendientes y deuda vencida.
                     </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white transition hover:opacity-95 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => setCobroModalOpen(true)}
+                    >
+                      Registrar cobro
+                    </button>
                   </div>
                 </div>
               </header>
@@ -92,62 +99,35 @@ export default function CobrosPage() {
               <section className="space-y-4">
                 <CobrosKpiRow kpis={data.kpis} currency={company.currency} />
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <div className="grid gap-4 lg:grid-cols-2">
-                      <DebtAgingDonut
-                        title="Antigüedad de deuda"
-                        items={data.aging.items}
-                        total={data.aging.total}
-                        currency={company.currency}
-                      />
-                      <CollectionsEvolutionChart
-                        points={data.evolution.points}
-                        currency={company.currency}
-                      />
-                    </div>
-                  </div>
-                  <div className="lg:col-span-1">
-                    <CollectionsAlerts
-                      title="Alertas de cobranza"
-                      items={data.alerts}
-                    />
-                  </div>
-                </div>
+                <DebtAgingDonut
+                  title="Antigüedad de deuda"
+                  items={data.aging.items}
+                  total={data.aging.total}
+                  currency={company.currency}
+                />
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-1">
-                    <CustomersReceivableTable
-                      title="Clientes por cobrar"
-                      items={data.customers}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <InvoicesPendingTable
-                      title="Facturas pendientes"
-                      items={data.invoices}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <RecentCollectionsActivity
-                      title="Actividad reciente"
-                      items={data.activity}
-                      currency={company.currency}
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2 text-center text-xs text-muted-foreground">
-                  Los datos se actualizan en tiempo real desde tus documentos y
-                  cuentas por cobrar.
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <CustomersReceivableTable
+                    title="Clientes por cobrar"
+                    items={data.customers}
+                    currency={company.currency}
+                  />
+                  <InvoicesPendingTable
+                    title="Facturas pendientes"
+                    items={data.invoices}
+                    currency={company.currency}
+                  />
                 </div>
               </section>
             </div>
           </main>
         </div>
       </div>
+
+      <RegisterCobroModal
+        open={cobroModalOpen}
+        onClose={() => setCobroModalOpen(false)}
+      />
     </div>
   );
 }

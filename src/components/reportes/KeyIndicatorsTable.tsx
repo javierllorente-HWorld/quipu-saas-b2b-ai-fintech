@@ -22,12 +22,6 @@ export function KeyIndicatorsTable({ title, items }: KeyIndicatorsTableProps) {
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
           </div>
-          <button
-            type="button"
-            className="qp-btn-ghost h-9 px-4 text-[color:var(--primary)] hover:bg-[color:var(--quipu-ice)]"
-          >
-            Ver todos los indicadores →
-          </button>
         </div>
       </div>
       <div className="qp-card-content">

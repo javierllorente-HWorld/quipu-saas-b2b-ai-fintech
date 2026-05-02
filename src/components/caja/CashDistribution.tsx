@@ -3,11 +3,14 @@
 import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney } from "@/components/inicio/format";
-import type { CashDistributionItem } from "./mock";
+import type { BankBalance, CashDistributionItem } from "./mock";
+import { BankBalancesTableContent } from "./BankBalancesTable";
+import { IconChevronDown } from "@/components/inicio/icons";
 
 export type CashDistributionProps = {
   items: CashDistributionItem[];
   currency: CurrencyCode;
+  bankBalances: BankBalance[];
 };
 
 function clamp01(x: number) {
@@ -65,7 +68,8 @@ const toneByKey: Record<string, { swatch: string; fill: string; ring: string }> 
     },
   };
 
-export function CashDistribution({ items, currency }: CashDistributionProps) {
+export function CashDistribution({ items, currency, bankBalances }: CashDistributionProps) {
+  const [bankBalancesOpen, setBankBalancesOpen] = React.useState(false);
   const total = items.reduce((acc, x) => acc + x.amount, 0);
   const safeTotal = total <= 0 ? 1 : total;
 
@@ -94,7 +98,7 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
             <div className="text-base font-semibold tracking-tight">
               Distribución de caja
             </div>
-            <div className="mt-1 text-sm text-muted-foreground">
+            <div className="mt-1 mb-3 text-sm text-muted-foreground">
               Cómo está compuesto tu saldo disponible.
             </div>
           </div>
@@ -197,6 +201,29 @@ export function CashDistribution({ items, currency }: CashDistributionProps) {
               );
             })}
           </div>
+        </div>
+
+        <div className="mt-8 border-t border-border pt-6">
+          <button
+            type="button"
+            className="flex w-full min-w-0 items-center justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
+            aria-expanded={bankBalancesOpen}
+            onClick={() => setBankBalancesOpen((v) => !v)}
+          >
+            <span className="text-base font-semibold tracking-tight">Saldos por banco</span>
+            <IconChevronDown
+              className={[
+                "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                bankBalancesOpen ? "rotate-180" : "",
+              ].join(" ")}
+              aria-hidden
+            />
+          </button>
+          {bankBalancesOpen ? (
+            <div className="mt-4">
+              <BankBalancesTableContent items={bankBalances} currency={currency} />
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

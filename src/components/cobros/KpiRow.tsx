@@ -3,7 +3,6 @@
 import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney } from "@/components/inicio/format";
-import { IconArrowDown, IconArrowUp } from "@/components/inicio/icons";
 import type { CobrosKpi } from "./mock";
 
 export type CobrosKpiRowProps = {
@@ -26,56 +25,23 @@ function formatKpiValue(kpi: CobrosKpi, currency: CurrencyCode) {
 
 export function CobrosKpiRow({ kpis, currency }: CobrosKpiRowProps) {
   return (
-    <div className="qp-kpi-row">
-      {kpis.map((kpi) => {
-        const delta = kpi.deltaPct;
-        const deltaTone =
-          delta == null
-            ? "text-muted-foreground"
-            : delta >= 0
-              ? "text-emerald-600"
-              : "text-rose-600";
-
-        return (
-          <div key={kpi.key} className="qp-card min-w-0">
-            <div className="qp-card-header">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {kpi.label}
-                  </div>
-                  <div className="qp-kpi-stat">
-                    {formatKpiValue(kpi, currency)}
-                  </div>
+    <div className="qp-kpi-row qp-kpi-row-cobros">
+      {kpis.map((kpi) => (
+        <div key={kpi.key} className="qp-card min-w-0">
+          <div className="qp-card-header pb-5 xl:pb-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-muted-foreground">
+                  {kpi.label}
                 </div>
-              </div>
-            </div>
-            <div className="qp-card-content">
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-xs text-muted-foreground">
-                  {kpi.hint ?? ""}
+                <div className="qp-kpi-stat">
+                  {formatKpiValue(kpi, currency)}
                 </div>
-                {delta == null ? null : (
-                  <div
-                    className={`inline-flex items-center gap-1 text-xs font-semibold ${deltaTone}`}
-                  >
-                    {delta >= 0 ? (
-                      <IconArrowUp className="size-4" />
-                    ) : (
-                      <IconArrowDown className="size-4" />
-                    )}
-                    <span>
-                      {Math.abs(delta).toFixed(1)}
-                      {kpi.key === "tasaCobranza" ? " pp" : "%"}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }
-

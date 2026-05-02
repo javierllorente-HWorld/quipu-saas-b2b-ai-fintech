@@ -19,7 +19,7 @@ function formatKpiValue(kpi: ReportesKpi, currency: CurrencyCode) {
 
 export function ReportesKpiRow({ kpis, currency }: ReportesKpiRowProps) {
   return (
-    <div className="qp-kpi-row">
+    <div className="qp-kpi-row qp-kpi-row-reportes">
       {kpis.map((kpi) => {
         const delta = kpi.deltaPct;
         const deltaTone =

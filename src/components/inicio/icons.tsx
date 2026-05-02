@@ -60,6 +60,26 @@ export function IconArrowUp(props: IconProps) {
   );
 }
 
+export function IconArrowDownRight(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M7 7l10 10" />
+      <path d="M14 17h3" />
+      <path d="M17 14v3" />
+    </BaseIcon>
+  );
+}
+
+export function IconArrowUpRight(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M7 17l10-10" />
+      <path d="M14 7h3" />
+      <path d="M17 10V7" />
+    </BaseIcon>
+  );
+}
+
 export function IconBank(props: IconProps) {
   return (
     <BaseIcon {...props}>
@@ -123,6 +143,16 @@ export function IconWallClock(props: IconProps) {
       <path d="M12 18.5V19" />
       <path d="M5 12h.5" />
       <path d="M18.5 12h.5" />
+    </BaseIcon>
+  );
+}
+
+export function IconHistory(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M4 12a8 8 0 1 0 8-8" />
+      <path d="M4 4v4h4" />
+      <path d="M12 8v4l2.5 1.5" />
     </BaseIcon>
   );
 }

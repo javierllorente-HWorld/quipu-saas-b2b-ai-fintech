@@ -90,22 +90,7 @@ export function DebtAgingDonut({ title, total, items, currency }: DebtAgingDonut
   return (
     <div className="qp-card">
       <div className="qp-card-header">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="text-base font-semibold tracking-tight">{title}</div>
-            <div className="mt-1 text-sm text-muted-foreground">
-              Distribución por antigüedad para priorizar riesgos.
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <select className="h-9 rounded-full border border-border bg-card px-3 text-xs font-semibold text-muted-foreground hover:bg-white/70">
-              <option>Todos los clientes</option>
-            </select>
-            <select className="h-9 rounded-full border border-border bg-card px-3 text-xs font-semibold text-muted-foreground hover:bg-white/70">
-              <option>Monto</option>
-            </select>
-          </div>
-        </div>
+        <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
 
       <div className="qp-card-content">

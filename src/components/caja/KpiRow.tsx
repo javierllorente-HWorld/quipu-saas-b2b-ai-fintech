@@ -20,9 +20,14 @@ function formatKpiValue(kpi: CashKpi, currency: CurrencyCode) {
 
 export function CajaKpiRow({ kpis, currency }: CajaKpiRowProps) {
   return (
-    <div className="qp-kpi-row">
+    <div className="qp-kpi-row qp-kpi-row-caja">
       {kpis.map((kpi) => {
-        const delta = kpi.key === "connectedBanks" ? null : kpi.deltaPct;
+        const delta =
+          kpi.key === "connectedBanks" ||
+          kpi.key === "totalAvailable" ||
+          kpi.key === "availableToday"
+            ? null
+            : kpi.deltaPct;
         const deltaTone =
           delta == null
             ? "text-muted-foreground"
