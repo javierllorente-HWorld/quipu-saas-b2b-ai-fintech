@@ -3,7 +3,6 @@
 import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney } from "@/components/inicio/format";
-import { IconArrowDown, IconArrowUp } from "@/components/inicio/icons";
 import type { PagosKpi } from "./mock";
 
 export type PagosKpiRowProps = {
@@ -24,15 +23,9 @@ function formatKpiValue(kpi: PagosKpi, currency: CurrencyCode) {
 
 export function PagosKpiRow({ kpis, currency }: PagosKpiRowProps) {
   return (
-    <div className="qp-kpi-row">
+    <div className="qp-kpi-row qp-kpi-row-pagos">
       {kpis.map((kpi) => {
-        const delta = kpi.deltaPct;
-        const deltaTone =
-          delta == null
-            ? "text-muted-foreground"
-            : delta >= 0
-              ? "text-emerald-600"
-              : "text-rose-600";
+        const hint = kpi.hint?.trim() ?? "";
 
         return (
           <div key={kpi.key} className="qp-card min-w-0">
@@ -48,24 +41,12 @@ export function PagosKpiRow({ kpis, currency }: PagosKpiRowProps) {
                 </div>
               </div>
             </div>
-            <div className="qp-card-content">
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-xs text-muted-foreground">
-                  {kpi.hint ?? ""}
-                </div>
-                {delta == null ? null : (
-                  <div
-                    className={`inline-flex items-center gap-1 text-xs font-semibold ${deltaTone}`}
-                  >
-                    {delta >= 0 ? (
-                      <IconArrowUp className="size-4" />
-                    ) : (
-                      <IconArrowDown className="size-4" />
-                    )}
-                    <span>{Math.abs(delta).toFixed(1)}%</span>
-                  </div>
-                )}
-              </div>
+            <div className="qp-card-content pt-2">
+              {hint ? (
+                <div className="text-xs text-muted-foreground">{hint}</div>
+              ) : (
+                <div className="min-h-[1.25rem]" aria-hidden />
+              )}
             </div>
           </div>
         );
@@ -73,4 +54,3 @@ export function PagosKpiRow({ kpis, currency }: PagosKpiRowProps) {
     </div>
   );
 }
-

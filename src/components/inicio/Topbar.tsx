@@ -4,10 +4,9 @@ import * as React from "react";
 import type { Company } from "./mock";
 import {
   IconChevronDown,
-  IconWallClock,
+  IconHistory,
   IconLogout,
   IconMenu,
-  IconSearch,
 } from "./icons";
 import { getDemoSession, signOutDemo } from "@/lib/demoAuth";
 import { useRouter } from "next/navigation";
@@ -27,6 +26,7 @@ export function Topbar({
   onCompanyChange,
   onOpenSidebar,
 }: TopbarProps) {
+  void onCompanyChange;
   const router = useRouter();
   const active = companies.find((c) => c.id === activeCompanyId) ?? companies[0];
   const dashboard = mockDashboardByCompanyId[activeCompanyId];
@@ -114,24 +114,15 @@ export function Topbar({
           </div>
         </div>
 
-        <div className="hidden w-full max-w-md items-center md:flex">
-          <div className="relative w-full">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              <IconSearch className="size-4" />
-            </span>
-            <input
-              className="qp-input h-10 pl-9"
-              placeholder="Buscar movimientos, clientes, facturas…"
-            />
-          </div>
-        </div>
-
         <div className="flex items-center gap-2">
           <div ref={notificationsRef} className="relative">
             <button
               type="button"
-              className="inline-flex size-10 items-center justify-center rounded-2xl border border-border bg-card hover:bg-white/70"
-              aria-label="Notificaciones"
+              className={[
+                "inline-flex size-10 items-center justify-center rounded-2xl border border-border bg-card hover:bg-white/70",
+                notificationsOpen ? "bg-white/80" : "",
+              ].join(" ")}
+              aria-label="Últimos movimientos"
               aria-haspopup="menu"
               aria-expanded={notificationsOpen}
               onClick={() => {
@@ -139,14 +130,14 @@ export function Topbar({
                 setNotificationsOpen((v) => !v);
               }}
             >
-              <IconWallClock className="size-5 text-foreground" />
+              <IconHistory className="size-5 text-foreground" />
             </button>
 
             {notificationsOpen ? (
               <div
-                className="absolute right-0 top-full z-30 mt-2 w-64 rounded-2xl border border-border bg-card shadow-[var(--shadow-card)]"
+                className="absolute right-0 top-full z-30 mt-2 w-[340px] rounded-2xl border border-border bg-card shadow-[var(--shadow-card)]"
                 role="menu"
-                aria-label="Notificaciones"
+                aria-label="Últimos movimientos"
               >
                 <RecentActivityDropdown
                   items={dashboard?.activity ?? []}
@@ -219,18 +210,6 @@ export function Topbar({
               </div>
             ) : null}
           </div>
-        </div>
-      </div>
-
-      <div className="px-4 pb-3 md:hidden sm:px-6">
-        <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            <IconSearch className="size-4" />
-          </span>
-          <input
-            className="qp-input h-10 pl-9"
-            placeholder="Buscar…"
-          />
         </div>
       </div>
     </div>

@@ -8,18 +8,17 @@ import { IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { mockTesoreriaByCompanyId } from "@/components/tesoreria/mock";
 import { TesoreriaKpiRow } from "@/components/tesoreria/KpiRow";
-import { ConsolidatedPositionChart } from "@/components/tesoreria/ConsolidatedPositionChart";
-import { BankDistributionDonut } from "@/components/tesoreria/BankDistributionDonut";
 import { TreasuryBankBalancesTable } from "@/components/tesoreria/BankBalancesTable";
 import { ScheduledTransfersTable } from "@/components/tesoreria/ScheduledTransfersTable";
-import { TreasuryMovementsTable } from "@/components/tesoreria/TreasuryMovementsTable";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
+import { NuevaTransferenciaModal } from "@/components/shared/NuevaTransferenciaModal";
 
 export default function TesoreriaPage() {
   useRequireDemoAuth();
 
   const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [transferModalOpen, setTransferModalOpen] = React.useState(false);
 
   const company =
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
@@ -81,9 +80,17 @@ export default function TesoreriaPage() {
                       Tesorería
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Coordiná bancos, liquidez y transferencias desde un solo lugar.
-                      Tomá decisiones de corto plazo con visibilidad total de fondos.
+                      Bancos, liquidez y transferencias en un solo lugar.
                     </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white transition hover:opacity-95 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => setTransferModalOpen(true)}
+                    >
+                      Nueva transferencia
+                    </button>
                   </div>
                 </div>
               </header>
@@ -91,56 +98,28 @@ export default function TesoreriaPage() {
               <section className="space-y-4">
                 <TesoreriaKpiRow kpis={data.kpis} currency={company.currency} />
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <ConsolidatedPositionChart
-                      title="Posición consolidada"
-                      series={data.position.series}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <BankDistributionDonut
-                      title="Distribución por banco"
-                      total={data.bankDistribution.total}
-                      items={data.bankDistribution.items}
-                      currency={company.currency}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-1">
-                    <TreasuryBankBalancesTable
-                      title="Saldos bancarios"
-                      items={data.bankBalances}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <ScheduledTransfersTable
-                      title="Transferencias programadas"
-                      items={data.scheduledTransfers}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <TreasuryMovementsTable
-                      title="Movimientos de tesorería"
-                      items={data.movements}
-                      currency={company.currency}
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2 text-center text-xs text-muted-foreground">
-                  Los datos se actualizan en tiempo real desde tus bancos conectados.
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <TreasuryBankBalancesTable
+                    title="Saldos bancarios"
+                    items={data.bankBalances}
+                    currency={company.currency}
+                  />
+                  <ScheduledTransfersTable
+                    title="Transferencias programadas"
+                    items={data.scheduledTransfers}
+                    currency={company.currency}
+                  />
                 </div>
               </section>
             </div>
           </main>
         </div>
       </div>
+
+      <NuevaTransferenciaModal
+        open={transferModalOpen}
+        onClose={() => setTransferModalOpen(false)}
+      />
     </div>
   );
 }

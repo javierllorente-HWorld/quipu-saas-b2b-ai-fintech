@@ -6,12 +6,10 @@ import { getDemoSession } from "@/lib/demoAuth";
 
 export function useRequireDemoAuth() {
   const router = useRouter();
-  const [session, setSession] = React.useState(() => getDemoSession());
+  const [session] = React.useState(() => getDemoSession());
 
   React.useEffect(() => {
-    const current = getDemoSession();
-    setSession(current);
-    if (!current) {
+    if (!getDemoSession()) {
       router.replace("/login");
     }
   }, [router]);

@@ -4,31 +4,33 @@ import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney, formatShortDate } from "@/components/inicio/format";
 import type { RecentMovement } from "./mock";
+import { PagosCardPagination } from "@/components/pagos/PagosCardPagination";
 
 export type RecentMovementsTableProps = {
   items: RecentMovement[];
   currency: CurrencyCode;
 };
 
+const PAGE_SIZE = 3;
+
 export function RecentMovementsTable({ items, currency }: RecentMovementsTableProps) {
+  const [page, setPage] = React.useState(0);
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const pageIdx = Math.min(page, totalPages - 1);
+  const pagedItems = items.slice(pageIdx * PAGE_SIZE, (pageIdx + 1) * PAGE_SIZE);
+
   return (
     <div className="qp-card">
       <div className="qp-card-header">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-base font-semibold tracking-tight">
-              Movimientos recientes
+              Últimos movimientos
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Últimas operaciones registradas.
+              Historial de últimas operaciones registradas.
             </div>
           </div>
-          <button
-            type="button"
-            className="qp-btn-ghost h-9 px-4 text-[color:var(--primary)] hover:bg-[color:var(--quipu-ice)]"
-          >
-            Ver todos
-          </button>
         </div>
       </div>
 
@@ -45,7 +47,7 @@ export function RecentMovementsTable({ items, currency }: RecentMovementsTablePr
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {items.map((row) => {
+              {pagedItems.map((row) => {
                 const isIngreso = row.amount >= 0;
                 return (
                   <tr key={row.id} className="hover:bg-black/[0.02]">
@@ -74,6 +76,13 @@ export function RecentMovementsTable({ items, currency }: RecentMovementsTablePr
             </tbody>
           </table>
         </div>
+
+        <PagosCardPagination
+          pageIndex={pageIdx}
+          totalPages={totalPages}
+          onPrev={() => setPage((p) => Math.max(0, p - 1))}
+          onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+        />
       </div>
     </div>
   );

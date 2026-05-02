@@ -2,29 +2,27 @@
 
 import * as React from "react";
 
-type MovementType = "Cobro" | "Pago" | "Transferencia" | "Ajuste";
-
-export type RegisterMovementModalProps = {
+export type RegisterCobroModalProps = {
   open: boolean;
   onClose: () => void;
   onSaved?: () => void;
 };
 
 type FormState = {
-  type: MovementType | "";
   date: string;
   amount: string;
-  account: string;
-  counterparty: string;
+  client: string;
+  invoice: string;
+  destinationAccount: string;
   description: string;
 };
 
 const defaultState: FormState = {
-  type: "",
   date: "",
   amount: "",
-  account: "",
-  counterparty: "",
+  client: "",
+  invoice: "",
+  destinationAccount: "",
   description: "",
 };
 
@@ -39,7 +37,7 @@ function useOnEscape(active: boolean, onEscape: () => void) {
   }, [active, onEscape]);
 }
 
-export function RegisterMovementModal({ open, onClose, onSaved }: RegisterMovementModalProps) {
+export function RegisterCobroModal({ open, onClose, onSaved }: RegisterCobroModalProps) {
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const [form, setForm] = React.useState<FormState>(defaultState);
   const [error, setError] = React.useState<string | null>(null);
@@ -68,11 +66,11 @@ export function RegisterMovementModal({ open, onClose, onSaved }: RegisterMoveme
     setError(null);
 
     const missing =
-      !form.type ||
       !form.date.trim() ||
       !form.amount.trim() ||
-      !form.account.trim() ||
-      !form.counterparty.trim() ||
+      !form.client.trim() ||
+      !form.invoice.trim() ||
+      !form.destinationAccount.trim() ||
       !form.description.trim();
 
     if (missing) {
@@ -91,7 +89,7 @@ export function RegisterMovementModal({ open, onClose, onSaved }: RegisterMoveme
       className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8"
       role="dialog"
       aria-modal="true"
-      aria-label="Registrar movimiento"
+      aria-label="Registrar cobro"
       onPointerDown={onBackdropPointerDown}
     >
       <div className="absolute inset-0 bg-black/35" />
@@ -102,43 +100,21 @@ export function RegisterMovementModal({ open, onClose, onSaved }: RegisterMoveme
       >
         <div className="px-6 pt-6">
           <div className="text-lg font-semibold tracking-tight text-foreground">
-            Registrar movimiento
+            Registrar cobro
           </div>
           <div className="mt-1 text-sm text-muted-foreground">
-            Completá los datos del movimiento.
+            Completá los datos del cobro.
           </div>
         </div>
 
         <form onSubmit={onSubmit} className="px-6 pb-6 pt-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="qp-label" htmlFor="rm-type">
-                Tipo de movimiento
-              </label>
-              <select
-                id="rm-type"
-                className="h-11 w-full rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground"
-                value={form.type}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, type: e.target.value as MovementType }))
-                }
-              >
-                <option value="" disabled>
-                  Seleccionar…
-                </option>
-                <option value="Cobro">Cobro</option>
-                <option value="Pago">Pago</option>
-                <option value="Transferencia">Transferencia</option>
-                <option value="Ajuste">Ajuste</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="qp-label" htmlFor="rm-date">
+              <label className="qp-label" htmlFor="rc-date">
                 Fecha
               </label>
               <input
-                id="rm-date"
+                id="rc-date"
                 type="date"
                 className="qp-input"
                 value={form.date}
@@ -147,11 +123,11 @@ export function RegisterMovementModal({ open, onClose, onSaved }: RegisterMoveme
             </div>
 
             <div className="space-y-2">
-              <label className="qp-label" htmlFor="rm-amount">
+              <label className="qp-label" htmlFor="rc-amount">
                 Monto
               </label>
               <input
-                id="rm-amount"
+                id="rc-amount"
                 type="number"
                 inputMode="decimal"
                 className="qp-input"
@@ -162,41 +138,54 @@ export function RegisterMovementModal({ open, onClose, onSaved }: RegisterMoveme
             </div>
 
             <div className="space-y-2">
-              <label className="qp-label" htmlFor="rm-account">
-                Cuenta
+              <label className="qp-label" htmlFor="rc-client">
+                Cliente
               </label>
               <input
-                id="rm-account"
+                id="rc-client"
                 type="text"
                 className="qp-input"
-                value={form.account}
-                onChange={(e) => setForm((s) => ({ ...s, account: e.target.value }))}
+                value={form.client}
+                onChange={(e) => setForm((s) => ({ ...s, client: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="qp-label" htmlFor="rc-invoice">
+                Factura asociada
+              </label>
+              <input
+                id="rc-invoice"
+                type="text"
+                className="qp-input"
+                value={form.invoice}
+                onChange={(e) => setForm((s) => ({ ...s, invoice: e.target.value }))}
               />
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <label className="qp-label" htmlFor="rm-counterparty">
-                Contraparte
+              <label className="qp-label" htmlFor="rc-account">
+                Cuenta destino
               </label>
               <input
-                id="rm-counterparty"
+                id="rc-account"
                 type="text"
                 className="qp-input"
-                placeholder="Cliente o proveedor"
-                value={form.counterparty}
-                onChange={(e) => setForm((s) => ({ ...s, counterparty: e.target.value }))}
+                value={form.destinationAccount}
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, destinationAccount: e.target.value }))
+                }
               />
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <label className="qp-label" htmlFor="rm-desc">
+              <label className="qp-label" htmlFor="rc-desc">
                 Descripción
               </label>
               <input
-                id="rm-desc"
+                id="rc-desc"
                 type="text"
                 className="qp-input"
-                placeholder="Ej: Cobro factura #1842"
                 value={form.description}
                 onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
               />
@@ -214,7 +203,7 @@ export function RegisterMovementModal({ open, onClose, onSaved }: RegisterMoveme
               Cancelar
             </button>
             <button type="submit" className="qp-btn-primary h-10 px-4">
-              Guardar movimiento
+              Guardar cobro
             </button>
           </div>
         </form>

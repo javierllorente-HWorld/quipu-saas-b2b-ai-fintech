@@ -6,13 +6,7 @@ import { Topbar } from "@/components/inicio/Topbar";
 import { mockCompanies, mockDashboardByCompanyId } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
-import { mockCopilotByCompanyId } from "@/components/ia/mock";
 import { CopilotCard } from "@/components/inicio/CopilotCard";
-import { FinancialHealthSummary } from "@/components/ia/FinancialHealthSummary";
-import { OpportunitiesPanel } from "@/components/ia/OpportunitiesPanel";
-import { SmartAlerts } from "@/components/ia/SmartAlerts";
-import { SuggestedActions } from "@/components/ia/SuggestedActions";
-import { ModuleRecommendations } from "@/components/ia/ModuleRecommendations";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 
 export default function IaPage() {
@@ -21,11 +15,8 @@ export default function IaPage() {
   const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
-  const company =
-    mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
-  const inicioData = mockDashboardByCompanyId[company.id] ?? mockDashboardByCompanyId["acme-ar"];
-  const data =
-    mockCopilotByCompanyId[company.id] ?? mockCopilotByCompanyId["acme-ar"];
+  const inicioData =
+    mockDashboardByCompanyId[activeCompanyId] ?? mockDashboardByCompanyId["acme-ar"];
 
   const onNavigate = useSidebarNavigate({
     onAfterNavigate: () => setSidebarOpen(false),
@@ -65,7 +56,7 @@ export default function IaPage() {
           </div>
         ) : null}
 
-        <div className="min-w-0 flex-1">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col md:h-screen md:min-h-0">
           <Topbar
             companies={mockCompanies}
             activeCompanyId={activeCompanyId}
@@ -73,50 +64,10 @@ export default function IaPage() {
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
-          <main className="px-4 py-6 sm:px-6">
-            <div className="mx-auto w-full max-w-7xl">
-              <header className="mb-5">
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                      IA
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Tu copiloto financiero para entender salud, riesgos y
-                      oportunidades.
-                    </p>
-                  </div>
-                </div>
-              </header>
-
-              <section className="space-y-4">
+          <main className="flex min-h-0 flex-1 flex-col px-4 py-6 sm:px-6">
+            <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
+              <section className="flex min-h-0 flex-1 flex-col">
                 <CopilotCard suggestions={inicioData.copilotSuggestions} />
-
-                <div className="space-y-4">
-                  <FinancialHealthSummary
-                    title="Resumen financiero (últimos 30 días)"
-                    items={data.healthSummary}
-                    currency={company.currency}
-                  />
-                  <OpportunitiesPanel
-                    title="Sugerencias / oportunidades"
-                    items={data.opportunities}
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-                  <SmartAlerts title="Alertas inteligentes" items={data.smartAlerts} />
-                  <SuggestedActions title="Acciones sugeridas" items={data.suggestedActions} />
-                </div>
-
-                <ModuleRecommendations
-                  title="Recomendaciones por módulo"
-                  tabs={data.moduleRecommendations}
-                />
-
-                <div className="pt-2 text-center text-xs text-muted-foreground">
-                  Los datos se actualizan en tiempo real desde tus bancos conectados.
-                </div>
               </section>
             </div>
           </main>

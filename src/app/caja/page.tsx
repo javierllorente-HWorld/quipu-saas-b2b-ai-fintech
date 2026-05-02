@@ -7,9 +7,7 @@ import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
 import { mockCashByCompanyId } from "@/components/caja/mock";
 import { CajaKpiRow } from "@/components/caja/KpiRow";
-import { CashEvolutionChart } from "@/components/caja/CashEvolutionChart";
 import { CashDistribution } from "@/components/caja/CashDistribution";
-import { BankBalancesTable } from "@/components/caja/BankBalancesTable";
 import { UpcomingMovementsTable } from "@/components/caja/UpcomingMovementsTable";
 import { RecentMovementsTable } from "@/components/caja/RecentMovementsTable";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
@@ -91,16 +89,16 @@ export default function CajaPage() {
                       Caja
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Posición de caja en tiempo real — {company.name}
+                      Posición de caja en tiempo real
+                    </p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Actualizado hace 2 min
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" className="qp-btn-secondary h-10 px-4">
-                      Exportar
-                    </button>
                     <button
                       type="button"
-                      className="qp-btn-primary h-10 px-4"
+                      className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white transition hover:opacity-95 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => setRegisterOpen(true)}
                     >
                       Registrar movimiento
@@ -112,35 +110,18 @@ export default function CajaPage() {
               <section className="space-y-4">
                 <CajaKpiRow kpis={data.kpis} currency={company.currency} />
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <CashEvolutionChart points={data.evolution} currency={company.currency} />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <CashDistribution items={data.distribution} currency={company.currency} />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <BankBalancesTable
-                      items={data.bankBalances}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <UpcomingMovementsTable
-                      items={data.upcoming}
-                      currency={company.currency}
-                    />
-                  </div>
-                </div>
-
                 <RecentMovementsTable items={data.recent} currency={company.currency} />
 
-                <div className="pt-2 text-center text-xs text-muted-foreground">
-                  Los datos se actualizan en tiempo real desde tus bancos conectados.
-                </div>
+                <CashDistribution
+                  items={data.distribution}
+                  currency={company.currency}
+                  bankBalances={data.bankBalances}
+                />
+
+                <UpcomingMovementsTable
+                  items={data.upcoming}
+                  currency={company.currency}
+                />
               </section>
             </div>
           </main>

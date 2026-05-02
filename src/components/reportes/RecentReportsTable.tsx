@@ -2,32 +2,21 @@
 
 import * as React from "react";
 import type { RecentReportRow } from "./mock";
+import { PagosCardPagination } from "@/components/pagos/PagosCardPagination";
 
 export type RecentReportsTableProps = {
   title: string;
   items: RecentReportRow[];
 };
 
-function DownloadIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="size-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 3v10" />
-      <path d="M8 11l4 4 4-4" />
-      <path d="M4 20h16" />
-    </svg>
-  );
-}
+const PAGE_SIZE = 3;
 
 export function RecentReportsTable({ title, items }: RecentReportsTableProps) {
+  const [page, setPage] = React.useState(0);
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const pageIdx = Math.min(page, totalPages - 1);
+  const pagedItems = items.slice(pageIdx * PAGE_SIZE, (pageIdx + 1) * PAGE_SIZE);
+
   return (
     <div className="qp-card">
       <div className="qp-card-header">
@@ -35,12 +24,6 @@ export function RecentReportsTable({ title, items }: RecentReportsTableProps) {
           <div>
             <div className="text-base font-semibold tracking-tight">{title}</div>
           </div>
-          <button
-            type="button"
-            className="qp-btn-ghost h-9 px-4 text-[color:var(--primary)] hover:bg-[color:var(--quipu-ice)]"
-          >
-            Ver todos
-          </button>
         </div>
       </div>
       <div className="qp-card-content">
@@ -52,11 +35,10 @@ export function RecentReportsTable({ title, items }: RecentReportsTableProps) {
                 <th className="py-3 pr-4 font-medium">Período</th>
                 <th className="py-3 pr-4 font-medium">Generado</th>
                 <th className="py-3 pr-4 font-medium">Formato</th>
-                <th className="py-3 pl-2 text-right font-medium">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {items.map((row) => (
+              {pagedItems.map((row) => (
                 <tr key={row.id} className="hover:bg-black/[0.02]">
                   <td className="py-3 pr-4 font-medium text-foreground">
                     {row.nombre}
@@ -68,22 +50,19 @@ export function RecentReportsTable({ title, items }: RecentReportsTableProps) {
                       {row.formato}
                     </span>
                   </td>
-                  <td className="py-3 pl-2 text-right">
-                    <button
-                      type="button"
-                      className="inline-flex size-9 items-center justify-center rounded-2xl border border-border bg-card text-foreground hover:bg-white/70"
-                      aria-label="Descargar reporte"
-                    >
-                      <DownloadIcon />
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        <PagosCardPagination
+          pageIndex={pageIdx}
+          totalPages={totalPages}
+          onPrev={() => setPage((p) => Math.max(0, p - 1))}
+          onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+        />
       </div>
     </div>
   );
 }
-

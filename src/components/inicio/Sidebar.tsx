@@ -8,8 +8,9 @@ import {
   IconHelp,
   IconHome,
   IconSparkles,
+  IconArrowDownRight,
+  IconArrowUpRight,
   IconWallet,
-  IconChevronDown,
 } from "./icons";
 
 type SidebarItem = {
@@ -19,24 +20,34 @@ type SidebarItem = {
 };
 
 const SIDEBAR_COLLAPSED_KEY = "quipu_sidebar_collapsed";
+const SIDEBAR_COLLAPSED_EVENT = "quipu:sidebar-collapsed";
 
-function IconArrow({ className }: { className?: string }) {
-  // Minimal icon to avoid overloading sidebar visuals
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M7 12h10" />
-      <path d="M13 8l4 4-4 4" />
-    </svg>
-  );
+function subscribeSidebarCollapsed(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+  function onStorage(e: StorageEvent) {
+    if (e.key === SIDEBAR_COLLAPSED_KEY || e.key === null) onStoreChange();
+  }
+  function onLocal() {
+    onStoreChange();
+  }
+  window.addEventListener("storage", onStorage);
+  window.addEventListener(SIDEBAR_COLLAPSED_EVENT, onLocal);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener(SIDEBAR_COLLAPSED_EVENT, onLocal);
+  };
+}
+
+function getSidebarCollapsedSnapshot() {
+  if (typeof window === "undefined") return true;
+  const raw = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+  if (raw === "false") return false;
+  if (raw === "true") return true;
+  return true;
+}
+
+function getServerSidebarCollapsedSnapshot() {
+  return true;
 }
 
 export type SidebarProps = {
@@ -52,22 +63,19 @@ export function Sidebar({
   footerCta,
   forceExpanded = false,
 }: SidebarProps) {
-  const [collapsed, setCollapsed] = React.useState(true);
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
-    if (raw === "true") setCollapsed(true);
-    if (raw === "false") setCollapsed(false);
-  }, []);
+  const collapsed = React.useSyncExternalStore(
+    subscribeSidebarCollapsed,
+    getSidebarCollapsedSnapshot,
+    getServerSidebarCollapsedSnapshot,
+  );
 
   const effectiveCollapsed = collapsed && !forceExpanded;
 
   function toggleCollapsed() {
     const next = !collapsed;
-    setCollapsed(next);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      window.dispatchEvent(new Event(SIDEBAR_COLLAPSED_EVENT));
     }
   }
 
@@ -75,6 +83,7 @@ export function Sidebar({
     <aside
       className={[
         "relative h-full bg-[color:var(--quipu-night)] text-white overflow-visible",
+        "md:sticky md:top-0 md:h-screen md:shrink-0 md:self-start",
         "w-[220px] md:transition-[width] md:duration-200 md:ease-out",
         effectiveCollapsed ? "md:w-[72px]" : "md:w-[220px]",
       ].join(" ")}
@@ -85,26 +94,36 @@ export function Sidebar({
         aria-label={effectiveCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
         className={[
           "hidden md:inline-flex",
-          "absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2",
-          "size-10 items-center justify-center rounded-2xl",
-          "bg-[color:var(--quipu-accent)] text-white shadow-[var(--shadow-card)]",
-          "ring-1 ring-white/10",
-          "transition-transform duration-200",
-          "hover:opacity-95 active:translate-x-1/2 active:translate-y-[-50%] active:scale-[0.98]",
+          "absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-[40%]",
+          "size-8 items-center justify-center rounded-full",
+          "bg-[color:var(--quipu-night)]/85 text-white/90",
+          "border border-white/15",
+          "shadow-sm shadow-black/10",
+          "transition-colors duration-200",
+          "hover:bg-white/10 hover:text-white active:scale-[0.97]",
         ].join(" ")}
         title={effectiveCollapsed ? "Expandir" : "Colapsar"}
       >
-        <IconChevronDown
+        <svg
+          viewBox="0 0 24 24"
           className={[
-            "size-4 transition-transform duration-200",
-            effectiveCollapsed ? "-rotate-90" : "rotate-90",
+            "size-3.5 transition-transform duration-200",
+            effectiveCollapsed ? "" : "scale-x-[-1]",
           ].join(" ")}
-        />
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M10 7l5 5-5 5" />
+        </svg>
       </button>
 
       <div
         className={[
-          "flex h-full flex-col py-5",
+          "flex h-full min-h-0 flex-col py-5",
           effectiveCollapsed ? "px-2" : "px-2.5",
         ].join(" ")}
       >
@@ -135,53 +154,63 @@ export function Sidebar({
           )}
         </div>
 
-        <nav className="mt-7 flex flex-1 flex-col justify-between gap-6">
-          <div className="space-y-1">
-            <SidebarLink
-              item={{ key: "inicio", label: "Inicio", icon: <IconHome className="size-5" /> }}
-              activeKey={activeKey}
-              onNavigate={onNavigate}
-              collapsed={effectiveCollapsed}
-            />
-            <SidebarLink
-              item={{ key: "caja", label: "Caja", icon: <IconWallet className="size-5" /> }}
-              activeKey={activeKey}
-              onNavigate={onNavigate}
-              collapsed={effectiveCollapsed}
-            />
-            <SidebarLink
-              item={{ key: "cobros", label: "Cobros", icon: <IconArrow className="size-5" /> }}
-              activeKey={activeKey}
-              onNavigate={onNavigate}
-              collapsed={effectiveCollapsed}
-            />
-            <SidebarLink
-              item={{ key: "pagos", label: "Pagos", icon: <IconWallet className="size-5" /> }}
-              activeKey={activeKey}
-              onNavigate={onNavigate}
-              collapsed={effectiveCollapsed}
-            />
-            <SidebarLink
-              item={{ key: "tesoreria", label: "Tesorería", icon: <IconBank className="size-5" /> }}
-              activeKey={activeKey}
-              onNavigate={onNavigate}
-              collapsed={effectiveCollapsed}
-            />
-            <SidebarLink
-              item={{ key: "reportes", label: "Reportes", icon: <IconChart className="size-5" /> }}
-              activeKey={activeKey}
-              onNavigate={onNavigate}
-              collapsed={effectiveCollapsed}
-            />
-            <SidebarLink
-              item={{ key: "ia", label: "IA", icon: <IconSparkles className="size-5" /> }}
-              activeKey={activeKey}
-              onNavigate={onNavigate}
-              collapsed={effectiveCollapsed}
-            />
-          </div>
+        <div className="mt-7 flex min-h-0 flex-1 flex-col gap-6">
+          <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="space-y-1">
+              <SidebarLink
+                item={{ key: "inicio", label: "Inicio", icon: <IconHome className="size-5" /> }}
+                activeKey={activeKey}
+                onNavigate={onNavigate}
+                collapsed={effectiveCollapsed}
+              />
+              <SidebarLink
+                item={{ key: "caja", label: "Caja", icon: <IconWallet className="size-5" /> }}
+                activeKey={activeKey}
+                onNavigate={onNavigate}
+                collapsed={effectiveCollapsed}
+              />
+              <SidebarLink
+                item={{
+                  key: "cobros",
+                  label: "Cobros",
+                  icon: <IconArrowDownRight className="size-5" />,
+                }}
+                activeKey={activeKey}
+                onNavigate={onNavigate}
+                collapsed={effectiveCollapsed}
+              />
+              <SidebarLink
+                item={{
+                  key: "pagos",
+                  label: "Pagos",
+                  icon: <IconArrowUpRight className="size-5" />,
+                }}
+                activeKey={activeKey}
+                onNavigate={onNavigate}
+                collapsed={effectiveCollapsed}
+              />
+              <SidebarLink
+                item={{ key: "tesoreria", label: "Tesorería", icon: <IconBank className="size-5" /> }}
+                activeKey={activeKey}
+                onNavigate={onNavigate}
+                collapsed={effectiveCollapsed}
+              />
+              <SidebarLink
+                item={{ key: "reportes", label: "Reportes", icon: <IconChart className="size-5" /> }}
+                activeKey={activeKey}
+                onNavigate={onNavigate}
+                collapsed={effectiveCollapsed}
+              />
+              <SidebarLink
+                item={{ key: "ia", label: "IA", icon: <IconSparkles className="size-5" /> }}
+                activeKey={activeKey}
+                onNavigate={onNavigate}
+                collapsed={effectiveCollapsed}
+              />
+            </div>
+          </nav>
 
-          <div className="space-y-3">
+          <div className="shrink-0 space-y-3">
             {footerCta ? footerCta : null}
             {effectiveCollapsed ? null : (
               <div className="rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
@@ -211,7 +240,7 @@ export function Sidebar({
               {effectiveCollapsed ? null : "Centro de ayuda"}
             </button>
           </div>
-        </nav>
+        </div>
       </div>
     </aside>
   );

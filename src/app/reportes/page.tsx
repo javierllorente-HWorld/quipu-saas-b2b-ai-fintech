@@ -9,18 +9,19 @@ import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { mockReportesByCompanyId } from "@/components/reportes/mock";
 import { ReportesKpiRow } from "@/components/reportes/KpiRow";
 import { IncomeExpenseChart } from "@/components/reportes/IncomeExpenseChart";
-import { ProfitabilityChart } from "@/components/reportes/ProfitabilityChart";
-import { FiltersExportCard } from "@/components/reportes/FiltersExportCard";
-import { UnitSummaryTable } from "@/components/reportes/UnitSummaryTable";
 import { KeyIndicatorsTable } from "@/components/reportes/KeyIndicatorsTable";
 import { RecentReportsTable } from "@/components/reportes/RecentReportsTable";
+import { GenerateReportModal } from "@/components/reportes/GenerateReportModal";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
+import { Toast } from "@/components/shared/Toast";
 
 export default function ReportesPage() {
   useRequireDemoAuth();
 
   const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [generateReportOpen, setGenerateReportOpen] = React.useState(false);
+  const [savedToast, setSavedToast] = React.useState(false);
 
   const company =
     mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
@@ -31,8 +32,15 @@ export default function ReportesPage() {
     onAfterNavigate: () => setSidebarOpen(false),
   });
 
+  React.useEffect(() => {
+    if (!savedToast) return;
+    const t = window.setTimeout(() => setSavedToast(false), 2600);
+    return () => window.clearTimeout(t);
+  }, [savedToast]);
+
   return (
     <div className="qp-shell">
+      <Toast message="Reporte generado correctamente" show={savedToast} />
       <div className="min-h-screen bg-background md:flex">
         <div className="hidden md:block md:shrink-0">
           <Sidebar activeKey="reportes" onNavigate={onNavigate} />
@@ -82,10 +90,17 @@ export default function ReportesPage() {
                       Reportes
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Accedé a reportes ejecutivos claros para seguir ingresos,
-                      egresos y rentabilidad. Compartí información confiable con
-                      socios y mandos medios.
+                      Compartí información confiable con socios y mandos medios.
                     </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white transition hover:opacity-95 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => setGenerateReportOpen(true)}
+                    >
+                      Generar reporte
+                    </button>
                   </div>
                 </div>
               </header>
@@ -94,39 +109,20 @@ export default function ReportesPage() {
                 <ReportesKpiRow kpis={data.kpis} currency={company.currency} />
 
                 <div className="grid gap-4 lg:grid-cols-12">
-                  <div className="lg:col-span-7">
+                  <div className="lg:col-span-8">
                     <IncomeExpenseChart
                       title="Ingresos vs egresos"
                       datasets={data.incomeExpense.datasets}
                       currency={company.currency}
                     />
                   </div>
-                  <div className="lg:col-span-3">
-                    <ProfitabilityChart
-                      title="Rentabilidad"
-                      points={data.profitability.points}
-                    />
-                  </div>
-                  <div className="lg:col-span-2">
-                    <FiltersExportCard title="Filtros y exportación" />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-1">
-                    <UnitSummaryTable
-                      title="Resumen por unidad"
-                      items={data.unitSummary}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
+                  <div className="lg:col-span-4">
                     <KeyIndicatorsTable
                       title="Indicadores clave"
                       items={data.keyIndicators}
                     />
                   </div>
-                  <div className="lg:col-span-1">
+                  <div className="lg:col-span-12">
                     <RecentReportsTable
                       title="Reportes recientes"
                       items={data.recentReports}
@@ -134,14 +130,17 @@ export default function ReportesPage() {
                   </div>
                 </div>
 
-                <div className="pt-2 text-center text-xs text-muted-foreground">
-                  Los datos se actualizan en tiempo real desde tus bancos conectados.
-                </div>
               </section>
             </div>
           </main>
         </div>
       </div>
+
+      <GenerateReportModal
+        open={generateReportOpen}
+        onClose={() => setGenerateReportOpen(false)}
+        onGenerated={() => setSavedToast(true)}
+      />
     </div>
   );
 }

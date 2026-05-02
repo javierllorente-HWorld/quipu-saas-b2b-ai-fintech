@@ -14,12 +14,12 @@ export function UpcomingTable({ items, currency }: UpcomingTableProps) {
   const [page, setPage] = React.useState(0);
   const totalPages = Math.ceil(items.length / pageSize);
   const safeTotalPages = Math.max(1, totalPages);
-  const pageItems = items.slice(page * pageSize, (page + 1) * pageSize);
-
-  React.useEffect(() => {
-    if (page <= safeTotalPages - 1) return;
-    setPage(Math.max(0, safeTotalPages - 1));
-  }, [page, safeTotalPages]);
+  const maxPageIdx = safeTotalPages - 1;
+  const clampedPage = Math.min(page, maxPageIdx);
+  if (clampedPage !== page) {
+    setPage(clampedPage);
+  }
+  const pageItems = items.slice(clampedPage * pageSize, (clampedPage + 1) * pageSize);
 
   return (
     <div className="qp-card">
@@ -40,7 +40,7 @@ export function UpcomingTable({ items, currency }: UpcomingTableProps) {
                 <th className="py-3 pr-4 font-medium">Fecha</th>
                 <th className="py-3 pr-4 font-medium">Tipo</th>
                 <th className="py-3 pr-4 font-medium">Descripción</th>
-                <th className="py-3 pr-4 font-medium">Cliente/Proveedor</th>
+                <th className="py-3 pr-4 font-medium">Contraparte</th>
                 <th className="py-3 pl-2 text-right font-medium">Monto</th>
               </tr>
             </thead>
@@ -81,26 +81,31 @@ export function UpcomingTable({ items, currency }: UpcomingTableProps) {
           </table>
         </div>
 
-        {totalPages > 1 ? (
-          <div className="mt-4 flex items-center justify-end gap-2">
+        <div className="mt-4 flex items-center justify-end gap-3">
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {clampedPage + 1} de {safeTotalPages}
+          </span>
+          <div className="inline-flex items-center gap-1">
             <button
               type="button"
-              className="qp-btn-secondary h-9 px-3 text-xs"
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
+              aria-label="Página anterior"
+              className="inline-flex size-7 items-center justify-center rounded-lg border border-border bg-card text-sm font-medium leading-none text-foreground transition hover:bg-white/80 disabled:pointer-events-none disabled:opacity-40"
+              onClick={() => setPage((p) => Math.max(0, Math.min(maxPageIdx, p - 1)))}
+              disabled={clampedPage === 0}
             >
-              Anterior
+              ‹
             </button>
             <button
               type="button"
-              className="qp-btn-secondary h-9 px-3 text-xs"
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
+              aria-label="Página siguiente"
+              className="inline-flex size-7 items-center justify-center rounded-lg border border-border bg-card text-sm font-medium leading-none text-foreground transition hover:bg-white/80 disabled:pointer-events-none disabled:opacity-40"
+              onClick={() => setPage((p) => Math.max(0, Math.min(maxPageIdx, p + 1)))}
+              disabled={clampedPage >= maxPageIdx}
             >
-              Siguiente
+              ›
             </button>
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   );

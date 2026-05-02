@@ -4,12 +4,15 @@ import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney, formatShortDate } from "@/components/inicio/format";
 import type { RecentPayment } from "./mock";
+import { PagosCardPagination } from "./PagosCardPagination";
 
 export type RecentPaymentsTableProps = {
   title: string;
   items: RecentPayment[];
   currency: CurrencyCode;
 };
+
+const PAGE_SIZE = 3;
 
 function StatusPill({ status }: { status: RecentPayment["status"] }) {
   const tone =
@@ -31,20 +34,15 @@ function StatusPill({ status }: { status: RecentPayment["status"] }) {
 }
 
 export function RecentPaymentsTable({ title, items, currency }: RecentPaymentsTableProps) {
+  const [page, setPage] = React.useState(0);
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const pageIdx = Math.min(page, totalPages - 1);
+  const pagedItems = items.slice(pageIdx * PAGE_SIZE, (pageIdx + 1) * PAGE_SIZE);
+
   return (
     <div className="qp-card">
       <div className="qp-card-header">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-base font-semibold tracking-tight">{title}</div>
-          </div>
-          <button
-            type="button"
-            className="qp-btn-ghost h-9 px-4 text-[color:var(--primary)] hover:bg-[color:var(--quipu-ice)]"
-          >
-            Ver todas
-          </button>
-        </div>
+        <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
       <div className="qp-card-content">
         <div className="overflow-x-auto">
@@ -59,7 +57,7 @@ export function RecentPaymentsTable({ title, items, currency }: RecentPaymentsTa
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {items.map((row) => (
+              {pagedItems.map((row) => (
                 <tr key={row.id} className="hover:bg-black/[0.02]">
                   <td className="py-3 pr-4 text-muted-foreground">
                     {formatShortDate(row.date)}
@@ -78,13 +76,13 @@ export function RecentPaymentsTable({ title, items, currency }: RecentPaymentsTa
           </table>
         </div>
 
-        <div className="pt-3 text-center text-xs">
-          <button type="button" className="text-[color:var(--primary)] hover:underline">
-            Ver todos los pagos →
-          </button>
-        </div>
+        <PagosCardPagination
+          pageIndex={pageIdx}
+          totalPages={totalPages}
+          onPrev={() => setPage((p) => Math.max(0, p - 1))}
+          onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+        />
       </div>
     </div>
   );
 }
-

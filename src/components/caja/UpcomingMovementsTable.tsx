@@ -4,34 +4,34 @@ import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney, formatShortDate } from "@/components/inicio/format";
 import type { UpcomingMovement } from "./mock";
+import { PagosCardPagination } from "@/components/pagos/PagosCardPagination";
 
 export type UpcomingMovementsTableProps = {
   items: UpcomingMovement[];
   currency: CurrencyCode;
 };
 
+const PAGE_SIZE = 3;
+
 export function UpcomingMovementsTable({
   items,
   currency,
 }: UpcomingMovementsTableProps) {
+  const [page, setPage] = React.useState(0);
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const pageIdx = Math.min(page, totalPages - 1);
+  const pagedItems = items.slice(pageIdx * PAGE_SIZE, (pageIdx + 1) * PAGE_SIZE);
+
   return (
     <div className="qp-card">
       <div className="qp-card-header">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-base font-semibold tracking-tight">
-              Próximos movimientos
-            </div>
-            <div className="mt-1 text-sm text-muted-foreground">
-              Lo que impacta tu caja en los próximos días.
-            </div>
+        <div>
+          <div className="text-base font-semibold tracking-tight">
+            Impactos futuros en caja
           </div>
-          <button
-            type="button"
-            className="qp-btn-ghost h-9 px-4 text-[color:var(--primary)] hover:bg-[color:var(--quipu-ice)]"
-          >
-            Ver calendario
-          </button>
+          <div className="mt-1 text-sm text-muted-foreground">
+            Cobros y pagos previstos que afectarán tu saldo.
+          </div>
         </div>
       </div>
 
@@ -47,7 +47,7 @@ export function UpcomingMovementsTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {items.map((row) => {
+              {pagedItems.map((row) => {
                 const isIngreso = row.type === "Ingreso";
                 return (
                   <tr key={row.id} className="hover:bg-black/[0.02]">
@@ -84,8 +84,14 @@ export function UpcomingMovementsTable({
             </tbody>
           </table>
         </div>
+
+        <PagosCardPagination
+          pageIndex={pageIdx}
+          totalPages={totalPages}
+          onPrev={() => setPage((p) => Math.max(0, p - 1))}
+          onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+        />
       </div>
     </div>
   );
 }
-

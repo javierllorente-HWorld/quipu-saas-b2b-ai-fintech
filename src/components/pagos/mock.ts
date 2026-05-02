@@ -1,11 +1,6 @@
 import type { CurrencyCode } from "@/components/inicio/mock";
 
-export type PagosKpiKey =
-  | "totalPorPagar"
-  | "venceSemana"
-  | "aprobacionesPendientes"
-  | "pagadoMes"
-  | "ahorroProntoPago";
+export type PagosKpiKey = "totalPorPagar" | "venceSemana" | "aprobacionesPendientes";
 
 export type PagosKpi = {
   key: PagosKpiKey;
@@ -23,21 +18,6 @@ export type PaymentsCalendarPoint = {
   scheduled: number;
   paid: number;
   overdue: number;
-};
-
-export type PaymentsAlertKey =
-  | "porVencer"
-  | "aprobaciones"
-  | "vencidos"
-  | "comprobantes"
-  | "descuentos";
-
-export type PaymentsAlert = {
-  key: PaymentsAlertKey;
-  title: string;
-  description: string;
-  count: number;
-  severity: "high" | "medium" | "low";
 };
 
 export type UpcomingPayment = {
@@ -72,7 +52,6 @@ export type PagosDashboardData = {
   calendar: {
     points: PaymentsCalendarPoint[];
   };
-  alerts: PaymentsAlert[];
   upcoming: UpcomingPayment[];
   vendors: VendorRow[];
   recent: RecentPayment[];
@@ -86,40 +65,19 @@ const acme: PagosDashboardData = {
       label: "Total por pagar",
       value: 45230600,
       format: "money",
-      deltaPct: 8.6,
-      hint: "vs. hoy",
     },
     {
       key: "venceSemana",
-      label: "Vence esta semana",
+      label: "Por vencer esta semana",
       value: 12450000,
       format: "money",
-      deltaPct: -6.1,
-      hint: "vs. semana ant.",
     },
     {
       key: "aprobacionesPendientes",
       label: "Aprobaciones pendientes",
       value: 9850000,
       format: "money",
-      deltaPct: 0,
       hint: "5 pagos pendientes",
-    },
-    {
-      key: "pagadoMes",
-      label: "Pagado este mes",
-      value: 38750200,
-      format: "money",
-      deltaPct: 14.2,
-      hint: "vs. mismo mes ant.",
-    },
-    {
-      key: "ahorroProntoPago",
-      label: "Ahorro por pronto pago",
-      value: 2180450,
-      format: "money",
-      deltaPct: 12.9,
-      hint: "vs. mes ant.",
     },
   ],
   calendar: {
@@ -139,43 +97,6 @@ const acme: PagosDashboardData = {
       { label: "27 Jun", scheduled: 950000, paid: 830000, overdue: 70000 },
     ],
   },
-  alerts: [
-    {
-      key: "porVencer",
-      title: "Pagos por vencer",
-      description: "Tenés 8 pagos por $ 12.450.000",
-      count: 8,
-      severity: "medium",
-    },
-    {
-      key: "aprobaciones",
-      title: "Aprobaciones pendientes",
-      description: "5 pagos requieren tu aprobación",
-      count: 5,
-      severity: "high",
-    },
-    {
-      key: "vencidos",
-      title: "Pagos vencidos",
-      description: "3 pagos vencidos por $ 2.350.000",
-      count: 3,
-      severity: "high",
-    },
-    {
-      key: "comprobantes",
-      title: "Comprobantes faltantes",
-      description: "2 pagos sin comprobante",
-      count: 2,
-      severity: "low",
-    },
-    {
-      key: "descuentos",
-      title: "Descuentos disponibles",
-      description: "4 proveedores con pronto pago",
-      count: 4,
-      severity: "low",
-    },
-  ],
   upcoming: [
     {
       id: "u1",
@@ -267,11 +188,9 @@ const acme: PagosDashboardData = {
 const northwind: PagosDashboardData = {
   currency: "USD",
   kpis: [
-    { key: "totalPorPagar", label: "Total por pagar", value: 18240, format: "money", deltaPct: 3.1, hint: "vs. hoy" },
-    { key: "venceSemana", label: "Vence esta semana", value: 5420, format: "money", deltaPct: -2.8, hint: "vs. semana ant." },
-    { key: "aprobacionesPendientes", label: "Aprobaciones pendientes", value: 2100, format: "money", deltaPct: 0.0, hint: "2 pagos pendientes" },
-    { key: "pagadoMes", label: "Pagado este mes", value: 14980, format: "money", deltaPct: 6.4, hint: "vs. mismo mes ant." },
-    { key: "ahorroProntoPago", label: "Ahorro por pronto pago", value: 420, format: "money", deltaPct: 9.2, hint: "vs. mes ant." },
+    { key: "totalPorPagar", label: "Total por pagar", value: 18240, format: "money" },
+    { key: "venceSemana", label: "Por vencer esta semana", value: 5420, format: "money" },
+    { key: "aprobacionesPendientes", label: "Aprobaciones pendientes", value: 2100, format: "money", hint: "2 pagos pendientes" },
   ],
   calendar: {
     points: [
@@ -290,13 +209,6 @@ const northwind: PagosDashboardData = {
       { label: "27 Jun", scheduled: 310, paid: 270, overdue: 20 },
     ],
   },
-  alerts: [
-    { key: "porVencer", title: "Pagos por vencer", description: "6 payments totaling $ 5,420", count: 6, severity: "medium" },
-    { key: "aprobaciones", title: "Aprobaciones pendientes", description: "2 payments require approval", count: 2, severity: "high" },
-    { key: "vencidos", title: "Pagos vencidos", description: "1 payment overdue ($ 680)", count: 1, severity: "high" },
-    { key: "comprobantes", title: "Comprobantes faltantes", description: "1 missing receipt", count: 1, severity: "low" },
-    { key: "descuentos", title: "Descuentos disponibles", description: "2 vendors with early-pay discounts", count: 2, severity: "low" },
-  ],
   upcoming: [
     { id: "nu1", date: "2026-05-21", vendor: "NimbusCloud", description: "Cloud services", amount: 980 },
     { id: "nu2", date: "2026-05-22", vendor: "Payroll Co.", description: "Payroll", amount: 2100 },

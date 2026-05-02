@@ -22,39 +22,47 @@
      return items.slice(0, limit);
    }, [items, limit]);
  
-   const rowClassName = compact
-     ? "flex items-center justify-between gap-3 rounded-2xl border border-border bg-white/60 px-3 py-2 hover:bg-white/80"
-     : "flex items-center justify-between gap-3 rounded-2xl border border-border bg-white/60 px-4 py-3 hover:bg-white/80";
+  const containerClassName = compact
+    ? "overflow-hidden rounded-2xl border border-border bg-white/60"
+    : "overflow-hidden rounded-2xl border border-border bg-white/60";
+  const rowClassName = compact
+    ? "flex items-center justify-between gap-3 px-3 py-2 hover:bg-black/[0.02]"
+    : "flex items-center justify-between gap-3 px-4 py-3 hover:bg-black/[0.02]";
  
    return (
-     <div className={compact ? "space-y-2" : "space-y-3"}>
+    <div className={containerClassName}>
+      <div className="divide-y divide-border">
        {visibleItems.map((m) => {
          const isIncome = m.type === "Ingreso";
          return (
            <div key={m.id} className={rowClassName}>
-             <div className="min-w-0">
-               <div className="truncate text-sm font-medium text-foreground">
-                 {m.description}
-               </div>
-               <div className="mt-1 text-xs text-muted-foreground">
-                 {formatTimeAgo(m.timestamp)}
-               </div>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-medium text-foreground">
+                {m.description}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {formatTimeAgo(m.timestamp)}
+              </div>
              </div>
              <div className="text-right">
                <div
                  className={[
-                   "text-sm font-semibold",
+                  "inline-flex items-baseline justify-end gap-1 text-sm font-semibold tabular-nums",
                    isIncome ? "text-emerald-700" : "text-rose-700",
                  ].join(" ")}
                >
-                 {isIncome ? "+" : "-"} {formatMoney(m.amount, currency)}
+                <span className="inline-block w-3 text-right" aria-hidden="true">
+                  {isIncome ? "+" : "-"}
+                </span>
+                <span>{formatMoney(m.amount, currency)}</span>
                </div>
                <div className="mt-1 text-xs text-muted-foreground">{m.type}</div>
              </div>
            </div>
          );
        })}
-     </div>
+      </div>
+    </div>
    );
  }
  
