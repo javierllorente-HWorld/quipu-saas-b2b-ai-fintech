@@ -6,29 +6,86 @@ import { Topbar } from "@/components/inicio/Topbar";
 import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
-import { mockCobrosByCompanyId } from "@/components/cobros/mock";
 import { CobrosKpiRow } from "@/components/cobros/KpiRow";
 import { DebtAgingDonut } from "@/components/cobros/DebtAgingDonut";
 import { CustomersReceivableTable } from "@/components/cobros/CustomersReceivableTable";
 import { InvoicesPendingTable } from "@/components/cobros/InvoicesPendingTable";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 import { RegisterCobroModal } from "@/components/shared/RegisterCobroModal";
+import {
+  mapReceivablesApiPayload,
+  type ReceivablesApiSuccessPayload,
+} from "@/components/cobros/mapReceivablesApi";
 
 export default function CobrosPage() {
   useRequireDemoAuth();
 
-  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [cobroModalOpen, setCobroModalOpen] = React.useState(false);
 
-  const company =
-    mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
-  const data =
-    mockCobrosByCompanyId[company.id] ?? mockCobrosByCompanyId["acme-ar"];
+  const [receivablesLoading, setReceivablesLoading] = React.useState(true);
+  const [receivablesError, setReceivablesError] = React.useState<string | null>(null);
+  const [receivablesView, setReceivablesView] = React.useState<
+    ReturnType<typeof mapReceivablesApiPayload> | null
+  >(null);
 
   const onNavigate = useSidebarNavigate({
     onAfterNavigate: () => setSidebarOpen(false),
   });
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setReceivablesLoading(true);
+    setReceivablesError(null);
+
+    fetch("/api/receivables", { cache: "no-store" })
+      .then(async (res) => {
+        const body = (await res.json()) as ReceivablesApiSuccessPayload & {
+          ok?: boolean;
+          error?: string;
+        };
+        if (!res.ok || body.ok !== true) {
+          throw new Error(
+            typeof body.error === "string"
+              ? body.error
+              : "No se pudieron cargar los datos de cobros.",
+          );
+        }
+        if (cancelled) return;
+        setReceivablesView(mapReceivablesApiPayload(body as ReceivablesApiSuccessPayload));
+        setReceivablesError(null);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setReceivablesView(null);
+        setReceivablesError(e instanceof Error ? e.message : "Error al cargar cobros.");
+      })
+      .finally(() => {
+        if (!cancelled) setReceivablesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const topbarCompanies = React.useMemo(() => {
+    if (receivablesView?.organization) {
+      return [
+        {
+          id: receivablesView.organization.id,
+          name: receivablesView.organization.name,
+          currency: receivablesView.currency,
+        },
+      ];
+    }
+    return mockCompanies;
+  }, [receivablesView]);
+
+  const activeCompanyId =
+    receivablesView?.organization?.id ?? mockCompanies[0]?.id ?? "acme-ar";
+
+  const displayCurrency = receivablesView?.currency ?? mockCompanies[0]?.currency ?? "ARS";
 
   return (
     <div className="qp-shell">
@@ -66,7 +123,7 @@ export default function CobrosPage() {
 
         <div className="min-w-0 flex-1">
           <Topbar
-            companies={mockCompanies}
+            companies={topbarCompanies}
             activeCompanyId={activeCompanyId}
             onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
@@ -83,12 +140,20 @@ export default function CobrosPage() {
                     <p className="mt-1 text-sm text-muted-foreground">
                       Cuentas por cobrar, facturas pendientes y deuda vencida.
                     </p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      {receivablesLoading
+                        ? "Cargando datos…"
+                        : receivablesError
+                          ? "No se pudo actualizar"
+                          : "Datos desde servidor"}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white transition hover:opacity-95 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => setCobroModalOpen(true)}
+                      disabled={receivablesLoading}
                     >
                       Registrar cobro
                     </button>
@@ -96,29 +161,44 @@ export default function CobrosPage() {
                 </div>
               </header>
 
-              <section className="space-y-4">
-                <CobrosKpiRow kpis={data.kpis} currency={company.currency} />
-
-                <DebtAgingDonut
-                  title="Antigüedad de deuda"
-                  items={data.aging.items}
-                  total={data.aging.total}
-                  currency={company.currency}
-                />
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <CustomersReceivableTable
-                    title="Clientes por cobrar"
-                    items={data.customers}
-                    currency={company.currency}
-                  />
-                  <InvoicesPendingTable
-                    title="Facturas pendientes"
-                    items={data.invoices}
-                    currency={company.currency}
-                  />
+              {receivablesError ? (
+                <div
+                  className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+                  role="alert"
+                >
+                  {receivablesError}
                 </div>
-              </section>
+              ) : null}
+
+              {receivablesLoading ? (
+                <div className="rounded-2xl border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+                  Cargando datos de cobros…
+                </div>
+              ) : receivablesView ? (
+                <section className="space-y-4">
+                  <CobrosKpiRow kpis={receivablesView.kpis} currency={displayCurrency} />
+
+                  <DebtAgingDonut
+                    title="Antigüedad de deuda"
+                    items={receivablesView.aging.items}
+                    total={receivablesView.aging.total}
+                    currency={displayCurrency}
+                  />
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <CustomersReceivableTable
+                      title="Clientes por cobrar"
+                      items={receivablesView.customers}
+                      currency={displayCurrency}
+                    />
+                    <InvoicesPendingTable
+                      title="Facturas pendientes"
+                      items={receivablesView.invoices}
+                      currency={displayCurrency}
+                    />
+                  </div>
+                </section>
+              ) : null}
             </div>
           </main>
         </div>
@@ -131,4 +211,3 @@ export default function CobrosPage() {
     </div>
   );
 }
-
