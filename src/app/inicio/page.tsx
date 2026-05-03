@@ -5,29 +5,179 @@ import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
 import { KpiRow } from "@/components/inicio/KpiRow";
 import { UpcomingTable } from "@/components/inicio/UpcomingTable";
-import {
-  mockCompanies,
-  mockDashboardByCompanyId,
-} from "@/components/inicio/mock";
+import type { Company, CurrencyCode, Kpi, UpcomingItem } from "@/components/inicio/mock";
 import { IconSparkles, IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 import { useRouter } from "next/navigation";
 
+type DashboardApiKpis = {
+  totalAvailable?: number;
+  netFlow?: number;
+  receivables?: number;
+  payables?: number;
+  income?: number;
+};
+
+type DashboardApiOrg = {
+  id?: string;
+  name?: string;
+  default_currency?: string;
+};
+
+type UpcomingApiEvent = {
+  type: string;
+  id: string;
+  date: string | null;
+  amount: number;
+  description?: string;
+};
+
+type DashboardApiSuccess = {
+  ok: true;
+  organization: DashboardApiOrg | null;
+  kpis: DashboardApiKpis;
+  upcomingEvents: UpcomingApiEvent[];
+};
+
+function toCurrencyCode(value: unknown): CurrencyCode {
+  if (value === "USD") return "USD";
+  return "ARS";
+}
+
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function mapApiKpis(api: DashboardApiKpis | undefined): Kpi[] {
+  const k = api ?? {};
+  return [
+    {
+      key: "availableBalance",
+      label: "Saldo total disponible",
+      value: num(k.totalAvailable),
+      hint: "En bancos + caja",
+    },
+    {
+      key: "netFlow",
+      label: "Flujo neto",
+      value: num(k.netFlow),
+      hint: "Ingresos menos egresos (caja)",
+    },
+    {
+      key: "accountsReceivable",
+      label: "Cuentas por cobrar",
+      value: num(k.receivables),
+      hint: "Facturas pendientes",
+    },
+    {
+      key: "accountsPayable",
+      label: "Cuentas por pagar",
+      value: num(k.payables),
+      hint: "Bills pendientes",
+    },
+    {
+      key: "income",
+      label: "Ingresos",
+      value: num(k.income),
+      hint: "Movimientos de entrada",
+    },
+  ];
+}
+
+function mapUpcomingEvents(events: UpcomingApiEvent[] | undefined): UpcomingItem[] {
+  if (!events?.length) return [];
+  const fallbackDate = new Date().toISOString().slice(0, 10);
+  return events.map((ev) => {
+    const dateStr =
+      typeof ev.date === "string" && ev.date.length >= 10 ? ev.date.slice(0, 10) : fallbackDate;
+    const isCollection = ev.type === "collection";
+    return {
+      id: ev.id,
+      type: isCollection ? "Cobro" : "Pago",
+      description: ev.description?.trim() || (isCollection ? "Cobro pendiente" : "Pago pendiente"),
+      date: dateStr,
+      counterparty: "—",
+      amount: num(ev.amount),
+    };
+  });
+}
+
+function companyFromOrg(org: DashboardApiOrg | null | undefined): Company {
+  return {
+    id: org?.id ?? "unknown",
+    name: org?.name?.trim() || "Empresa",
+    currency: toCurrencyCode(org?.default_currency),
+  };
+}
+
+const loadingCompany: Company = {
+  id: "__loading__",
+  name: "Cargando…",
+  currency: "ARS",
+};
+
+const fallbackCompany: Company = {
+  id: "__fallback__",
+  name: "Empresa",
+  currency: "ARS",
+};
+
 export default function InicioPage() {
   useRequireDemoAuth();
 
   const router = useRouter();
-  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [company, setCompany] = React.useState<Company>(loadingCompany);
+  const [kpis, setKpis] = React.useState<Kpi[]>([]);
+  const [upcoming, setUpcoming] = React.useState<UpcomingItem[]>([]);
 
-  const company =
-    mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
-  const data = mockDashboardByCompanyId[company.id];
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/dashboard", { cache: "no-store" });
+        if (cancelled) return;
+        const json = (await res.json()) as DashboardApiSuccess & { ok?: boolean; error?: string };
+        if (cancelled) return;
+        if (!res.ok || !json.ok) {
+          setError(json.error ?? "No se pudo cargar el panel.");
+          setCompany(fallbackCompany);
+          setKpis(mapApiKpis({}));
+          setUpcoming([]);
+          return;
+        }
+        setCompany(companyFromOrg(json.organization));
+        setKpis(mapApiKpis(json.kpis));
+        setUpcoming(mapUpcomingEvents(json.upcomingEvents));
+      } catch {
+        if (cancelled) return;
+        setError("No se pudo conectar con el servidor.");
+        setCompany(fallbackCompany);
+        setKpis(mapApiKpis({}));
+        setUpcoming([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const onNavigate = useSidebarNavigate({
     onAfterNavigate: () => setSidebarOpen(false),
   });
+
+  const topbarCompanies = React.useMemo(() => [company], [company]);
 
   return (
     <div className="qp-shell">
@@ -65,8 +215,8 @@ export default function InicioPage() {
 
         <div className="min-w-0 flex-1">
           <Topbar
-            companies={mockCompanies}
-            activeCompanyId={activeCompanyId}
+            companies={topbarCompanies}
+            activeCompanyId={company.id}
             onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
@@ -96,11 +246,26 @@ export default function InicioPage() {
                 </div>
               </header>
 
-              <section className="space-y-4">
-                <KpiRow kpis={data.kpis} currency={company.currency} />
+              {error ? (
+                <div
+                  className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+                  role="alert"
+                >
+                  {error}
+                </div>
+              ) : null}
 
-                <UpcomingTable items={data.upcoming} currency={company.currency} />
-              </section>
+              {loading ? (
+                <div className="rounded-2xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+                  Cargando datos del panel…
+                </div>
+              ) : (
+                <section className="space-y-4">
+                  <KpiRow kpis={kpis} currency={company.currency} />
+
+                  <UpcomingTable items={upcoming} currency={company.currency} />
+                </section>
+              )}
             </div>
           </main>
         </div>
@@ -108,4 +273,3 @@ export default function InicioPage() {
     </div>
   );
 }
-
