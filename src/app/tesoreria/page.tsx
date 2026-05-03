@@ -6,28 +6,85 @@ import { Topbar } from "@/components/inicio/Topbar";
 import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
-import { mockTesoreriaByCompanyId } from "@/components/tesoreria/mock";
 import { TesoreriaKpiRow } from "@/components/tesoreria/KpiRow";
 import { TreasuryBankBalancesTable } from "@/components/tesoreria/BankBalancesTable";
 import { ScheduledTransfersTable } from "@/components/tesoreria/ScheduledTransfersTable";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 import { NuevaTransferenciaModal } from "@/components/shared/NuevaTransferenciaModal";
+import {
+  mapTreasuryApiPayload,
+  type TreasuryApiSuccessPayload,
+} from "@/components/tesoreria/mapTreasuryApi";
 
 export default function TesoreriaPage() {
   useRequireDemoAuth();
 
-  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [transferModalOpen, setTransferModalOpen] = React.useState(false);
 
-  const company =
-    mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
-  const data =
-    mockTesoreriaByCompanyId[company.id] ?? mockTesoreriaByCompanyId["acme-ar"];
+  const [treasuryLoading, setTreasuryLoading] = React.useState(true);
+  const [treasuryError, setTreasuryError] = React.useState<string | null>(null);
+  const [treasuryView, setTreasuryView] = React.useState<
+    ReturnType<typeof mapTreasuryApiPayload> | null
+  >(null);
 
   const onNavigate = useSidebarNavigate({
     onAfterNavigate: () => setSidebarOpen(false),
   });
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setTreasuryLoading(true);
+    setTreasuryError(null);
+
+    fetch("/api/treasury", { cache: "no-store" })
+      .then(async (res) => {
+        const body = (await res.json()) as TreasuryApiSuccessPayload & {
+          ok?: boolean;
+          error?: string;
+        };
+        if (!res.ok || body.ok !== true) {
+          throw new Error(
+            typeof body.error === "string"
+              ? body.error
+              : "No se pudieron cargar los datos de tesorería.",
+          );
+        }
+        if (cancelled) return;
+        setTreasuryView(mapTreasuryApiPayload(body as TreasuryApiSuccessPayload));
+        setTreasuryError(null);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setTreasuryView(null);
+        setTreasuryError(e instanceof Error ? e.message : "Error al cargar tesorería.");
+      })
+      .finally(() => {
+        if (!cancelled) setTreasuryLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const topbarCompanies = React.useMemo(() => {
+    if (treasuryView?.organization) {
+      return [
+        {
+          id: treasuryView.organization.id,
+          name: treasuryView.organization.name,
+          currency: treasuryView.currency,
+        },
+      ];
+    }
+    return mockCompanies;
+  }, [treasuryView]);
+
+  const activeCompanyId =
+    treasuryView?.organization?.id ?? mockCompanies[0]?.id ?? "acme-ar";
+
+  const displayCurrency = treasuryView?.currency ?? mockCompanies[0]?.currency ?? "ARS";
 
   return (
     <div className="qp-shell">
@@ -65,7 +122,7 @@ export default function TesoreriaPage() {
 
         <div className="min-w-0 flex-1">
           <Topbar
-            companies={mockCompanies}
+            companies={topbarCompanies}
             activeCompanyId={activeCompanyId}
             onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
@@ -82,12 +139,20 @@ export default function TesoreriaPage() {
                     <p className="mt-1 text-sm text-muted-foreground">
                       Bancos, liquidez y transferencias en un solo lugar.
                     </p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      {treasuryLoading
+                        ? "Cargando datos…"
+                        : treasuryError
+                          ? "No se pudo actualizar"
+                          : "Datos desde servidor"}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white transition hover:opacity-95 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => setTransferModalOpen(true)}
+                      disabled={treasuryLoading}
                     >
                       Nueva transferencia
                     </button>
@@ -95,22 +160,37 @@ export default function TesoreriaPage() {
                 </div>
               </header>
 
-              <section className="space-y-4">
-                <TesoreriaKpiRow kpis={data.kpis} currency={company.currency} />
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <TreasuryBankBalancesTable
-                    title="Saldos bancarios"
-                    items={data.bankBalances}
-                    currency={company.currency}
-                  />
-                  <ScheduledTransfersTable
-                    title="Transferencias programadas"
-                    items={data.scheduledTransfers}
-                    currency={company.currency}
-                  />
+              {treasuryError ? (
+                <div
+                  className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+                  role="alert"
+                >
+                  {treasuryError}
                 </div>
-              </section>
+              ) : null}
+
+              {treasuryLoading ? (
+                <div className="rounded-2xl border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+                  Cargando datos de tesorería…
+                </div>
+              ) : treasuryView ? (
+                <section className="space-y-4">
+                  <TesoreriaKpiRow kpis={treasuryView.kpis} currency={displayCurrency} />
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <TreasuryBankBalancesTable
+                      title="Saldos bancarios"
+                      items={treasuryView.bankBalances}
+                      currency={displayCurrency}
+                    />
+                    <ScheduledTransfersTable
+                      title="Transferencias programadas"
+                      items={treasuryView.scheduledTransfers}
+                      currency={displayCurrency}
+                    />
+                  </div>
+                </section>
+              ) : null}
             </div>
           </main>
         </div>
@@ -123,4 +203,3 @@ export default function TesoreriaPage() {
     </div>
   );
 }
-
