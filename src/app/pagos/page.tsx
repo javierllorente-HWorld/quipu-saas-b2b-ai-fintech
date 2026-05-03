@@ -6,7 +6,6 @@ import { Topbar } from "@/components/inicio/Topbar";
 import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
-import { mockPagosByCompanyId } from "@/components/pagos/mock";
 import { PagosKpiRow } from "@/components/pagos/KpiRow";
 import { PaymentsCalendarChart } from "@/components/pagos/PaymentsCalendarChart";
 import { UpcomingPaymentsTable } from "@/components/pagos/UpcomingPaymentsTable";
@@ -14,22 +13,80 @@ import { VendorsTable } from "@/components/pagos/VendorsTable";
 import { RecentPaymentsTable } from "@/components/pagos/RecentPaymentsTable";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 import { ProgramarPagoModal } from "@/components/shared/ProgramarPagoModal";
+import {
+  mapPayablesApiPayload,
+  type PayablesApiSuccessPayload,
+} from "@/components/pagos/mapPayablesApi";
 
 export default function PagosPage() {
   useRequireDemoAuth();
 
-  const activeCompanyId = mockCompanies[0]?.id ?? "acme-ar";
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [pagoModalOpen, setPagoModalOpen] = React.useState(false);
 
-  const company =
-    mockCompanies.find((c) => c.id === activeCompanyId) ?? mockCompanies[0];
-  const data =
-    mockPagosByCompanyId[company.id] ?? mockPagosByCompanyId["acme-ar"];
+  const [payablesLoading, setPayablesLoading] = React.useState(true);
+  const [payablesError, setPayablesError] = React.useState<string | null>(null);
+  const [payablesView, setPayablesView] = React.useState<
+    ReturnType<typeof mapPayablesApiPayload> | null
+  >(null);
 
   const onNavigate = useSidebarNavigate({
     onAfterNavigate: () => setSidebarOpen(false),
   });
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setPayablesLoading(true);
+    setPayablesError(null);
+
+    fetch("/api/payables", { cache: "no-store" })
+      .then(async (res) => {
+        const body = (await res.json()) as PayablesApiSuccessPayload & {
+          ok?: boolean;
+          error?: string;
+        };
+        if (!res.ok || body.ok !== true) {
+          throw new Error(
+            typeof body.error === "string"
+              ? body.error
+              : "No se pudieron cargar los datos de pagos.",
+          );
+        }
+        if (cancelled) return;
+        setPayablesView(mapPayablesApiPayload(body as PayablesApiSuccessPayload));
+        setPayablesError(null);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setPayablesView(null);
+        setPayablesError(e instanceof Error ? e.message : "Error al cargar pagos.");
+      })
+      .finally(() => {
+        if (!cancelled) setPayablesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const topbarCompanies = React.useMemo(() => {
+    if (payablesView?.organization) {
+      return [
+        {
+          id: payablesView.organization.id,
+          name: payablesView.organization.name,
+          currency: payablesView.currency,
+        },
+      ];
+    }
+    return mockCompanies;
+  }, [payablesView]);
+
+  const activeCompanyId =
+    payablesView?.organization?.id ?? mockCompanies[0]?.id ?? "acme-ar";
+
+  const displayCurrency = payablesView?.currency ?? mockCompanies[0]?.currency ?? "ARS";
 
   return (
     <div className="qp-shell">
@@ -67,7 +124,7 @@ export default function PagosPage() {
 
         <div className="min-w-0 flex-1">
           <Topbar
-            companies={mockCompanies}
+            companies={topbarCompanies}
             activeCompanyId={activeCompanyId}
             onCompanyChange={() => {}}
             onOpenSidebar={() => setSidebarOpen(true)}
@@ -84,12 +141,20 @@ export default function PagosPage() {
                     <p className="mt-1 text-sm text-muted-foreground">
                       Pagos a proveedores, vencimientos y aprobaciones.
                     </p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      {payablesLoading
+                        ? "Cargando datos…"
+                        : payablesError
+                          ? "No se pudo actualizar"
+                          : "Datos desde servidor"}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white transition hover:opacity-95 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => setPagoModalOpen(true)}
+                      disabled={payablesLoading}
                     >
                       Programar pago
                     </button>
@@ -97,39 +162,54 @@ export default function PagosPage() {
                 </div>
               </header>
 
-              <section className="space-y-4">
-                <PagosKpiRow kpis={data.kpis} currency={company.currency} />
-
-                <PaymentsCalendarChart
-                  title="Calendario de pagos"
-                  points={data.calendar.points}
-                  currency={company.currency}
-                />
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="lg:col-span-1">
-                    <UpcomingPaymentsTable
-                      title="Próximos pagos"
-                      items={data.upcoming}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <VendorsTable
-                      title="Proveedores"
-                      items={data.vendors}
-                      currency={company.currency}
-                    />
-                  </div>
-                  <div className="lg:col-span-1">
-                    <RecentPaymentsTable
-                      title="Pagos recientes"
-                      items={data.recent}
-                      currency={company.currency}
-                    />
-                  </div>
+              {payablesError ? (
+                <div
+                  className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+                  role="alert"
+                >
+                  {payablesError}
                 </div>
-              </section>
+              ) : null}
+
+              {payablesLoading ? (
+                <div className="rounded-2xl border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+                  Cargando datos de pagos…
+                </div>
+              ) : payablesView ? (
+                <section className="space-y-4">
+                  <PagosKpiRow kpis={payablesView.kpis} currency={displayCurrency} />
+
+                  <PaymentsCalendarChart
+                    title="Calendario de pagos"
+                    points={payablesView.calendar.points}
+                    currency={displayCurrency}
+                  />
+
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="lg:col-span-1">
+                      <UpcomingPaymentsTable
+                        title="Próximos pagos"
+                        items={payablesView.upcoming}
+                        currency={displayCurrency}
+                      />
+                    </div>
+                    <div className="lg:col-span-1">
+                      <VendorsTable
+                        title="Proveedores"
+                        items={payablesView.vendors}
+                        currency={displayCurrency}
+                      />
+                    </div>
+                    <div className="lg:col-span-1">
+                      <RecentPaymentsTable
+                        title="Pagos recientes"
+                        items={payablesView.recent}
+                        currency={displayCurrency}
+                      />
+                    </div>
+                  </div>
+                </section>
+              ) : null}
             </div>
           </main>
         </div>
@@ -139,4 +219,3 @@ export default function PagosPage() {
     </div>
   );
 }
-
