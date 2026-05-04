@@ -63,12 +63,14 @@ function safeDueDate(value: string | null | undefined): string {
   return t.toISOString().slice(0, 10);
 }
 
-function invoiceUiStatus(
-  computedStatus: string,
-  dueDateIso: string,
-): InvoiceStatus {
+function invoiceUiStatus(computedStatus: string, dueDateIso: string): InvoiceStatus {
+  const norm = (computedStatus ?? "").trim().toLowerCase();
+  if (norm === "vencida") return "Vencida";
+  if (norm === "por vencer" || norm === "por_vencer") return "Por_vencer";
+  if (norm === "pendiente") return "Pendiente";
+
   const today = new Date().toISOString().slice(0, 10);
-  if (computedStatus === "Vencida" || dueDateIso < today) return "Vencida";
+  if (dueDateIso < today) return "Vencida";
   if (dueDateIso >= today) return "Por_vencer";
   return "Pendiente";
 }

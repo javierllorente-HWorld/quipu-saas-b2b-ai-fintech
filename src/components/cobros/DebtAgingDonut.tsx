@@ -62,12 +62,14 @@ const toneByKey: Record<string, { swatch: string; fill: string; ring: string }> 
 
 export type DebtAgingDonutProps = {
   title: string;
+  /** Texto auxiliar bajo el título (opcional). */
+  subtitle?: string;
   total: number;
   items: DebtAgingItem[];
   currency: CurrencyCode;
 };
 
-export function DebtAgingDonut({ title, total, items, currency }: DebtAgingDonutProps) {
+export function DebtAgingDonut({ title, subtitle, total, items, currency }: DebtAgingDonutProps) {
   const safeTotal = total <= 0 ? 1 : total;
 
   const w = 240;
@@ -90,7 +92,12 @@ export function DebtAgingDonut({ title, total, items, currency }: DebtAgingDonut
   return (
     <div className="qp-card">
       <div className="qp-card-header">
-        <div className="text-base font-semibold tracking-tight">{title}</div>
+        <div>
+          <div className="text-base font-semibold tracking-tight">{title}</div>
+          {subtitle ? (
+            <div className="mt-1 text-sm text-muted-foreground">{subtitle}</div>
+          ) : null}
+        </div>
       </div>
 
       <div className="qp-card-content">

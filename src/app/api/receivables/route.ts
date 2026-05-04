@@ -87,6 +87,7 @@ export async function GET() {
            i.status,
            CASE
              WHEN i.due_date IS NOT NULL AND i.due_date::date < CURRENT_DATE THEN 'Vencida'
+             WHEN i.due_date IS NOT NULL AND i.due_date::date >= CURRENT_DATE THEN 'Por vencer'
              ELSE 'Pendiente'
            END AS computed_status
          FROM invoices i
@@ -139,7 +140,7 @@ export async function GET() {
 
     const aging = [
       {
-        label: "Al corriente y mora hasta 30 días",
+        label: "No vencido / vencido 0-30 días",
         amount: notDue,
         percentage: pctOf(notDue, agingTotal),
       },
@@ -200,7 +201,12 @@ export async function GET() {
         dueDate,
         amount: toNumber(row.amount),
         status: row.status,
-        computedStatus: row.computed_status === "Vencida" ? "Vencida" : "Pendiente",
+        computedStatus:
+          row.computed_status === "Vencida"
+            ? "Vencida"
+            : row.computed_status === "Por vencer"
+              ? "Por vencer"
+              : "Pendiente",
       };
     });
 
