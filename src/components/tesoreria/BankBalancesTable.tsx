@@ -12,7 +12,7 @@ export type TreasuryBankBalancesTableProps = {
   currency: CurrencyCode;
 };
 
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 5;
 
 function StatusPill({ status }: { status: BankBalanceRow["status"] }) {
   const tone =
