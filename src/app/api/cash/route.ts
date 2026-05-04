@@ -16,21 +16,88 @@ function toIsoDate(value: unknown): string | null {
   return null;
 }
 
-function accountTypeLabel(accountType: string | null | undefined): string {
-  if (!accountType) return "Sin tipo";
-  const key = accountType.toLowerCase();
-  const map: Record<string, string> = {
-    bank: "Banco",
-    banks: "Banco",
-    checking: "Cuenta corriente",
-    savings: "Caja de ahorro",
-    cash: "Efectivo / Caja",
-    investment: "Inversiones",
-    investments: "Inversiones",
-    in_transit: "En tránsito",
-    other: "Otros",
-  };
-  return map[key] ?? accountType.replace(/_/g, " ");
+/** Categoría estable para agrupar saldos por tipo de cuenta (etiqueta en español). */
+type DistributionCategory = "banks" | "cash" | "investments" | "inTransit" | "other";
+
+function distributionCategory(accountType: string | null | undefined): DistributionCategory {
+  const key = (accountType ?? "").toLowerCase().trim();
+  switch (key) {
+    case "bank":
+    case "banks":
+      return "banks";
+    case "wallet":
+    case "cash":
+      return "cash";
+    case "investment":
+    case "investments":
+      return "investments";
+    case "in_transit":
+      return "inTransit";
+    default:
+      return "other";
+  }
+}
+
+const DISTRIBUTION_LABEL: Record<DistributionCategory, string> = {
+  banks: "Bancos",
+  cash: "Efectivo / billeteras",
+  investments: "Inversiones",
+  inTransit: "En tránsito / otros",
+  other: "Otros",
+};
+
+const DISTRIBUTION_ORDER: DistributionCategory[] = [
+  "banks",
+  "cash",
+  "investments",
+  "inTransit",
+  "other",
+];
+
+type FutureImpactRow = {
+  impact_type: string;
+  id: string;
+  impact_date: Date | string | null;
+  amount: unknown;
+  counterparty_name: string;
+  document_number: string | null;
+  computed_status: string;
+};
+
+function resolveDocumentNumber(
+  eventType: "collection" | "payment",
+  rawFromDb: string | null | undefined,
+  id: string
+): { documentNumber: string; hadExplicitNumber: boolean } {
+  const trimmed = (rawFromDb ?? "").trim();
+  if (trimmed.length > 0) {
+    return { documentNumber: trimmed, hadExplicitNumber: true };
+  }
+  const compact = id.replace(/-/g, "").toUpperCase();
+  if (eventType === "collection") {
+    const fallback = id.length >= 8 ? id.slice(0, 8) : "S/N";
+    return { documentNumber: fallback, hadExplicitNumber: false };
+  }
+  const suffix = compact.slice(0, 6) || "SN";
+  return { documentNumber: `BILL-${suffix}`, hadExplicitNumber: false };
+}
+
+function buildFutureImpactDescription(
+  eventType: "collection" | "payment",
+  documentNumber: string,
+  hadExplicitNumber: boolean,
+  counterpartyRaw: string
+): string {
+  const cp = (counterpartyRaw ?? "").trim() || "Sin contraparte";
+  let docLine: string;
+  if (eventType === "collection") {
+    docLine = hadExplicitNumber
+      ? `Factura ${documentNumber}`
+      : `Factura sin número (${documentNumber})`;
+  } else {
+    docLine = `Pago ${documentNumber}`;
+  }
+  return `${docLine} — ${cp}`;
 }
 
 export async function GET() {
@@ -118,19 +185,35 @@ export async function GET() {
              'collection'::text AS impact_type,
              i.id::text AS id,
              i.due_date AS impact_date,
-             i.amount AS amount
+             i.amount,
+             COALESCE(NULLIF(TRIM(c.name), ''), 'Sin cliente') AS counterparty_name,
+             COALESCE(NULLIF(TRIM(i.invoice_number::text), ''), '') AS document_number,
+             CASE
+               WHEN i.due_date IS NOT NULL AND i.due_date::date < CURRENT_DATE THEN 'overdue'
+               ELSE 'upcoming'
+             END AS computed_status
            FROM invoices i
+           LEFT JOIN customers c
+             ON c.id = i.customer_id AND c.organization_id = i.organization_id
            WHERE i.organization_id = $1::uuid AND i.status = 'pending'
            UNION ALL
            SELECT
              'payment'::text,
              b.id::text,
              b.due_date,
-             b.amount
+             b.amount,
+             COALESCE(NULLIF(TRIM(v.name), ''), 'Sin proveedor'),
+             COALESCE(NULLIF(TRIM(b.bill_number::text), ''), ''),
+             CASE
+               WHEN b.due_date IS NOT NULL AND b.due_date::date < CURRENT_DATE THEN 'overdue'
+               ELSE 'upcoming'
+             END
            FROM bills b
+           LEFT JOIN vendors v
+             ON v.id = b.vendor_id AND v.organization_id = b.organization_id
            WHERE b.organization_id = $1::uuid AND b.status = 'pending'
          ) u
-         ORDER BY impact_date ASC NULLS LAST
+         ORDER BY impact_date ASC NULLS LAST, impact_type ASC, id ASC
          LIMIT 10`,
         [ORGANIZATION_ID]
       ),
@@ -152,23 +235,29 @@ export async function GET() {
     const invoices30 = toNumber(invoices30Res.rows[0]?.total);
     const bills30 = toNumber(bills30Res.rows[0]?.total);
 
+    // Saldo actual + cobros pendientes con vencimiento en los próximos 30 días
+    // − pagos pendientes con vencimiento en los próximos 30 días (consultas invoices30 / bills30).
     const kpis = {
       immediateAvailable: totalAvailable,
       totalAvailable,
       projected30d: totalAvailable + invoices30 - bills30,
     };
 
-    const distTotal = distributionRes.rows.reduce(
-      (acc, row: { amount?: unknown }) => acc + toNumber(row.amount),
-      0
-    );
+    const mergedByCategory = new Map<DistributionCategory, number>();
+    for (const row of distributionRes.rows as { account_type?: string | null; amount?: unknown }[]) {
+      const cat = distributionCategory(row.account_type);
+      mergedByCategory.set(cat, (mergedByCategory.get(cat) ?? 0) + toNumber(row.amount));
+    }
 
-    const distribution = distributionRes.rows.map(
-      (row: { account_type?: string | null; amount?: unknown }) => {
-        const amount = toNumber(row.amount);
+    const distTotal = DISTRIBUTION_ORDER.reduce((acc, cat) => acc + (mergedByCategory.get(cat) ?? 0), 0);
+
+    const distribution = DISTRIBUTION_ORDER.filter((cat) => (mergedByCategory.get(cat) ?? 0) > 0).map(
+      (cat) => {
+        const amount = mergedByCategory.get(cat) ?? 0;
         const pct = distTotal > 0 ? (amount / distTotal) * 100 : 0;
         return {
-          label: accountTypeLabel(row.account_type ?? undefined),
+          key: cat,
+          label: DISTRIBUTION_LABEL[cat],
           amount,
           percentage: pct,
         };
@@ -214,23 +303,30 @@ export async function GET() {
       })
     );
 
-    const futureImpacts = futureRes.rows.map(
-      (row: {
-        impact_type: string;
-        id: string;
-        impact_date: Date | string | null;
-        amount: unknown;
-      }) => ({
-        type: row.impact_type === "payment" ? "payment" : "collection",
+    const futureImpacts = (futureRes.rows as FutureImpactRow[]).map((row) => {
+      const eventType = row.impact_type === "payment" ? "payment" : "collection";
+      const { documentNumber, hadExplicitNumber } = resolveDocumentNumber(
+        eventType,
+        row.document_number,
+        row.id
+      );
+      const computedStatus = row.computed_status === "overdue" ? "overdue" : "upcoming";
+      return {
         id: row.id,
+        type: eventType,
         date: toIsoDate(row.impact_date),
         amount: toNumber(row.amount),
-        description:
-          row.impact_type === "collection"
-            ? `Cobro pendiente — factura ${row.id.slice(0, 8)}`
-            : `Pago pendiente — bill ${row.id.slice(0, 8)}`,
-      })
-    );
+        description: buildFutureImpactDescription(
+          eventType,
+          documentNumber,
+          hadExplicitNumber,
+          row.counterparty_name
+        ),
+        counterpartyName: (row.counterparty_name ?? "").trim() || "Sin contraparte",
+        documentNumber,
+        computedStatus,
+      };
+    });
 
     return NextResponse.json({
       ok: true,

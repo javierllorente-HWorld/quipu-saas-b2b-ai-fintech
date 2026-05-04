@@ -22,7 +22,8 @@ export type CashDistributionKey =
   | "banks"
   | "cash"
   | "investments"
-  | "inTransit";
+  | "inTransit"
+  | "other";
 
 export type CashDistributionItem = {
   key: CashDistributionKey;
@@ -39,12 +40,15 @@ export type BankBalance = {
 
 export type MovementType = "Ingreso" | "Egreso";
 
+export type UpcomingComputedStatus = "overdue" | "upcoming";
+
 export type UpcomingMovement = {
   id: string;
   date: string; // ISO yyyy-mm-dd
   description: string;
   type: MovementType;
   amount: number;
+  computedStatus?: UpcomingComputedStatus;
 };
 
 export type RecentMovement = {
