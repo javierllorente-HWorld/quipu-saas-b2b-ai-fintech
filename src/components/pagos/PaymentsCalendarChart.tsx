@@ -13,11 +13,7 @@ export type PaymentsCalendarChartProps = {
 
 type RangeKey = "7d" | "30d" | "90d" | "calendar";
 
-function extent(values: number[]) {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  return { min, max };
-}
+const MAX_ROWS = 10;
 
 function Segment({
   label,
@@ -45,13 +41,22 @@ function Segment({
   );
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-2">
-      <span className={`inline-flex size-2.5 rounded-full ${color}`} />
-      <span>{label}</span>
-    </span>
-  );
+function formatRowDate(point: PaymentsCalendarPoint): string {
+  const iso = point.dateIso;
+  if (iso && /^\d{4}-\d{2}-\d{2}/.test(iso)) {
+    const d = new Date(`${iso.slice(0, 10)}T12:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      return d
+        .toLocaleDateString("es-AR", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+        .replace(/\./g, "")
+        .trim();
+    }
+  }
+  return point.label || "—";
 }
 
 export function PaymentsCalendarChart({
@@ -68,23 +73,6 @@ export function PaymentsCalendarChart({
     return points;
   }, [points, range]);
 
-  const w = 860;
-  const h = 240;
-  const padX = 34;
-  const padY = 18;
-
-  const maxValue = extent(
-    filtered.map((p) => p.scheduled + p.paid + p.overdue),
-  ).max;
-  const maxY = Math.max(1, maxValue);
-
-  const barW =
-    filtered.length === 0 ? 0 : (w - padX * 2) / Math.max(1, filtered.length);
-  const barInnerW = Math.max(6, Math.min(18, barW * 0.46));
-
-  const chartH = h - padY * 2;
-  const scale = (v: number) => (v / maxY) * chartH;
-
   const totals = filtered.reduce(
     (acc, p) => {
       acc.scheduled += p.scheduled;
@@ -94,6 +82,16 @@ export function PaymentsCalendarChart({
     },
     { scheduled: 0, paid: 0, overdue: 0 },
   );
+
+  const rows = React.useMemo(() => {
+    return filtered
+      .filter((p) => p.scheduled + p.paid + p.overdue > 0)
+      .slice(0, MAX_ROWS)
+      .map((p) => ({
+        point: p,
+        total: p.scheduled + p.paid + p.overdue,
+      }));
+  }, [filtered]);
 
   return (
     <div className="qp-card">
@@ -129,73 +127,73 @@ export function PaymentsCalendarChart({
 
       <div className="qp-card-content">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
-          <div className="w-full overflow-hidden">
-            <svg viewBox={`0 0 ${w} ${h}`} className="h-[240px] w-full" role="img">
-              <path
-                d={`M${padX},${h - padY} H${w - padX}`}
-                stroke="rgba(7,27,74,0.14)"
-                strokeWidth="1"
-              />
-
-              {filtered.map((p, i) => {
-                const xCenter =
-                  padX + i * barW + Math.max(10, barW / 2);
-                const x = xCenter - barInnerW / 2;
-
-                const hPaid = scale(p.paid);
-                const hScheduled = scale(p.scheduled);
-                const hOverdue = scale(p.overdue);
-
-                const yBase = h - padY;
-                const yPaid = yBase - hPaid;
-                const yScheduled = yPaid - hScheduled;
-                const yOverdue = yScheduled - hOverdue;
-
-                return (
-                  <g key={`${p.label}-${i}`}>
-                    {/* Paid */}
-                    <rect
-                      x={x}
-                      y={yPaid}
-                      width={barInnerW}
-                      height={hPaid}
-                      rx="6"
-                      fill="rgba(46,107,255,0.90)"
-                    />
-                    {/* Scheduled */}
-                    <rect
-                      x={x}
-                      y={yScheduled}
-                      width={barInnerW}
-                      height={hScheduled}
-                      rx="6"
-                      fill="rgba(17,78,216,0.75)"
-                      opacity="0.85"
-                    />
-                    {/* Overdue */}
-                    <rect
-                      x={x}
-                      y={yOverdue}
-                      width={barInnerW}
-                      height={hOverdue}
-                      rx="6"
-                      fill="rgba(244,63,94,0.86)"
-                    />
-                  </g>
-                );
-              })}
-            </svg>
-
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-              <LegendDot color="bg-[color:var(--quipu-accent)]" label="Pagado" />
-              <LegendDot color="bg-[color:var(--quipu-primary)]" label="Programado" />
-              <LegendDot color="bg-rose-500" label="Vencido" />
-            </div>
-
-            <div className="mt-3 flex justify-between text-xs text-muted-foreground">
-              <span>{filtered[0]?.label ?? ""}</span>
-              <span>{filtered.at(-1)?.label ?? ""}</span>
-            </div>
+          <div className="min-w-0">
+            {rows.length === 0 ? (
+              <div className="rounded-2xl border border-border bg-white/60 px-4 py-10 text-center text-sm text-muted-foreground">
+                Sin pagos en el período seleccionado.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="text-left text-xs text-muted-foreground">
+                    <tr className="border-b border-border">
+                      <th className="py-3 pr-4 font-medium">Fecha</th>
+                      <th className="py-3 pr-4 font-medium">Programado</th>
+                      <th className="py-3 pr-4 font-medium">Pagado</th>
+                      <th className="py-3 pr-4 font-medium">Vencido</th>
+                      <th className="py-3 pl-2 text-right font-medium">
+                        Total del día
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {rows.map(({ point, total }, idx) => (
+                      <tr
+                        key={`${point.dateIso ?? point.label}-${idx}`}
+                        className="hover:bg-black/[0.02]"
+                      >
+                        <td className="py-3 pr-4 font-medium text-foreground">
+                          {formatRowDate(point)}
+                        </td>
+                        <td
+                          className={[
+                            "py-3 pr-4 tabular-nums",
+                            point.scheduled > 0
+                              ? "font-semibold text-foreground"
+                              : "text-muted-foreground",
+                          ].join(" ")}
+                        >
+                          {formatMoney(point.scheduled, currency)}
+                        </td>
+                        <td
+                          className={[
+                            "py-3 pr-4 tabular-nums",
+                            point.paid > 0
+                              ? "font-semibold text-[color:var(--quipu-accent)]"
+                              : "text-muted-foreground",
+                          ].join(" ")}
+                        >
+                          {formatMoney(point.paid, currency)}
+                        </td>
+                        <td
+                          className={[
+                            "py-3 pr-4 tabular-nums",
+                            point.overdue > 0
+                              ? "font-semibold text-rose-600"
+                              : "text-muted-foreground",
+                          ].join(" ")}
+                        >
+                          {formatMoney(point.overdue, currency)}
+                        </td>
+                        <td className="py-3 pl-2 text-right font-semibold tabular-nums text-foreground">
+                          {formatMoney(total, currency)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="hidden rounded-2xl border border-border bg-white/60 px-4 py-3 text-right lg:block">
@@ -229,4 +227,3 @@ export function PaymentsCalendarChart({
     </div>
   );
 }
-
