@@ -10,6 +10,55 @@ function toNumber(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function toIsoDate(value: unknown): string | null {
+  if (value == null) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === "string" && value.length >= 10) return value.slice(0, 10);
+  return null;
+}
+
+type UpcomingRow = {
+  type: string;
+  id: string;
+  date: Date | string | null;
+  amount: unknown;
+  counterparty_name: string;
+  document_number: string | null;
+  row_status: string;
+  computed_status: string;
+};
+
+function resolveDocumentNumber(
+  eventType: "collection" | "payment",
+  rawFromDb: string | null | undefined,
+  id: string
+): { documentNumber: string; hadExplicitNumber: boolean } {
+  const trimmed = (rawFromDb ?? "").trim();
+  if (trimmed.length > 0) {
+    return { documentNumber: trimmed, hadExplicitNumber: true };
+  }
+  const compact = id.replace(/-/g, "").toUpperCase();
+  if (eventType === "collection") {
+    // Alineado con receivables: referencia corta cuando falta invoice_number
+    const fallback = id.length >= 8 ? id.slice(0, 8) : "S/N";
+    return { documentNumber: fallback, hadExplicitNumber: false };
+  }
+  const suffix = compact.slice(0, 6) || "SN";
+  return { documentNumber: `BILL-${suffix}`, hadExplicitNumber: false };
+}
+
+function buildDescription(
+  eventType: "collection" | "payment",
+  documentNumber: string,
+  hadExplicitNumber: boolean
+): string {
+  if (eventType === "collection") {
+    if (hadExplicitNumber) return `Factura ${documentNumber}`;
+    return `Factura sin número (${documentNumber})`;
+  }
+  return `Pago ${documentNumber}`;
+}
+
 export async function GET() {
   try {
     const orgResult = await query(
@@ -52,22 +101,40 @@ export async function GET() {
         query(
           `SELECT * FROM (
              SELECT
-               'collection'::text AS event_type,
+               'collection'::text AS type,
                i.id::text AS id,
                i.due_date AS date,
-               i.amount
+               i.amount,
+               COALESCE(NULLIF(TRIM(c.name), ''), 'Sin cliente') AS counterparty_name,
+               COALESCE(NULLIF(TRIM(i.invoice_number::text), ''), '') AS document_number,
+               i.status AS row_status,
+               CASE
+                 WHEN i.due_date IS NOT NULL AND i.due_date::date < CURRENT_DATE THEN 'overdue'
+                 ELSE 'upcoming'
+               END AS computed_status
              FROM invoices i
+             LEFT JOIN customers c
+               ON c.id = i.customer_id AND c.organization_id = i.organization_id
              WHERE i.organization_id = $1::uuid AND i.status = 'pending'
              UNION ALL
              SELECT
                'payment'::text,
                b.id::text,
                b.due_date,
-               b.amount
+               b.amount,
+               COALESCE(NULLIF(TRIM(v.name), ''), 'Sin proveedor'),
+               COALESCE(NULLIF(TRIM(b.bill_number::text), ''), '') AS document_number,
+               b.status,
+               CASE
+                 WHEN b.due_date IS NOT NULL AND b.due_date::date < CURRENT_DATE THEN 'overdue'
+                 ELSE 'upcoming'
+               END
              FROM bills b
+             LEFT JOIN vendors v
+               ON v.id = b.vendor_id AND v.organization_id = b.organization_id
              WHERE b.organization_id = $1::uuid AND b.status = 'pending'
            ) combined
-           ORDER BY date ASC NULLS LAST
+           ORDER BY date ASC NULLS LAST, type ASC, id ASC
            LIMIT 10`,
           [DEMO_ORGANIZATION_ID]
         ),
@@ -83,28 +150,28 @@ export async function GET() {
       income: toNumber(flowRow?.income),
     };
 
-    const upcomingEvents = upcomingRes.rows.map(
-      (row: { event_type: string; id: string; date: Date | string | null; amount: unknown }) => {
-        const d = row.date;
-        const dateStr =
-          d instanceof Date
-            ? d.toISOString().slice(0, 10)
-            : typeof d === "string"
-              ? d.slice(0, 10)
-              : null;
+    const upcomingEvents = (upcomingRes.rows as UpcomingRow[]).map((row) => {
+      const eventType = row.type === "payment" ? "payment" : "collection";
+      const dateStr = toIsoDate(row.date);
+      const { documentNumber, hadExplicitNumber } = resolveDocumentNumber(
+        eventType,
+        row.document_number,
+        row.id
+      );
+      const computedStatus = row.computed_status === "overdue" ? "overdue" : "upcoming";
 
-        return {
-          type: row.event_type,
-          id: row.id,
-          date: dateStr,
-          amount: toNumber(row.amount),
-          description:
-            row.event_type === "collection"
-              ? "Cobro pendiente (factura)"
-              : "Pago pendiente (bill / proveedor)",
-        };
-      }
-    );
+      return {
+        id: row.id,
+        type: eventType,
+        date: dateStr,
+        amount: toNumber(row.amount),
+        description: buildDescription(eventType, documentNumber, hadExplicitNumber),
+        counterpartyName: row.counterparty_name?.trim() || "—",
+        documentNumber,
+        computedStatus,
+        status: row.row_status,
+      };
+    });
 
     return NextResponse.json({
       ok: true,

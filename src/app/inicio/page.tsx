@@ -26,11 +26,15 @@ type DashboardApiOrg = {
 };
 
 type UpcomingApiEvent = {
-  type: string;
   id: string;
+  type: "collection" | "payment" | string;
   date: string | null;
   amount: number;
   description?: string;
+  counterpartyName?: string;
+  documentNumber?: string;
+  computedStatus?: "overdue" | "upcoming" | string;
+  status?: string;
 };
 
 type DashboardApiSuccess = {
@@ -93,13 +97,19 @@ function mapUpcomingEvents(events: UpcomingApiEvent[] | undefined): UpcomingItem
     const dateStr =
       typeof ev.date === "string" && ev.date.length >= 10 ? ev.date.slice(0, 10) : fallbackDate;
     const isCollection = ev.type === "collection";
+    const counterparty = (ev.counterpartyName ?? "").trim();
+    const computed =
+      ev.computedStatus === "overdue" || ev.computedStatus === "upcoming"
+        ? ev.computedStatus
+        : undefined;
     return {
       id: ev.id,
       type: isCollection ? "Cobro" : "Pago",
       description: ev.description?.trim() || (isCollection ? "Cobro pendiente" : "Pago pendiente"),
       date: dateStr,
-      counterparty: "—",
+      counterparty: counterparty.length > 0 ? counterparty : "—",
       amount: num(ev.amount),
+      computedStatus: computed,
     };
   });
 }
