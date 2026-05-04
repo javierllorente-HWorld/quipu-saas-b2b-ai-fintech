@@ -54,13 +54,33 @@ function mapBankStatus(apiStatus: string): BankBalanceRow["status"] {
   return apiStatus.toLowerCase() === "active" ? "Activa" : "Inactiva";
 }
 
+function accountTypeLabel(accountType: string | null | undefined): string {
+  const key = (accountType ?? "").trim().toLowerCase();
+  switch (key) {
+    case "bank":
+    case "banks":
+      return "Banco";
+    case "wallet":
+      return "Billetera";
+    case "cash":
+      return "Efectivo";
+    case "investment":
+    case "investments":
+      return "Inversión";
+    case "in_transit":
+      return "En tránsito";
+    default:
+      return key.length > 0 ? "Otro" : "";
+  }
+}
+
 function formatAccountCell(accountName: string, accountType: string): string {
   const name = (accountName ?? "").trim();
-  const type = (accountType ?? "").trim();
+  const typeLabel = accountTypeLabel(accountType);
   if (name && name !== "—") {
-    return type && type !== name ? `${name} · ${type}` : name;
+    return typeLabel && typeLabel !== name ? `${name} · ${typeLabel}` : name;
   }
-  if (type) return type;
+  if (typeLabel) return typeLabel;
   return "—";
 }
 
