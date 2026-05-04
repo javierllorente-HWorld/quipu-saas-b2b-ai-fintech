@@ -66,6 +66,11 @@ const toneByKey: Record<string, { swatch: string; fill: string; ring: string }> 
       fill: "rgba(100,116,139,0.55)",
       ring: "ring-[color:var(--quipu-border)]",
     },
+    other: {
+      swatch: "bg-amber-500/90",
+      fill: "rgba(245,158,11,0.55)",
+      ring: "ring-[color:var(--quipu-border)]",
+    },
   };
 
 export function CashDistribution({ items, currency, bankBalances }: CashDistributionProps) {

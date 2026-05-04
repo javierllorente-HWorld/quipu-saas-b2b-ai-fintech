@@ -30,6 +30,7 @@ export type CashApiSuccessPayload = {
     runningBalance: number;
   }>;
   distribution: Array<{
+    key: CashDistributionKey;
     label: string;
     amount: number;
     percentage: number;
@@ -46,15 +47,19 @@ export type CashApiSuccessPayload = {
     date: string | null;
     amount: number;
     description: string;
+    counterpartyName?: string;
+    documentNumber?: string;
+    computedStatus?: string;
   }>;
 };
 
-const DISTRIBUTION_KEYS: CashDistributionKey[] = [
-  "banks",
-  "cash",
-  "investments",
-  "inTransit",
-];
+function asDistributionKey(value: string | undefined): CashDistributionKey {
+  if (value === "banks" || value === "cash" || value === "investments" || value === "inTransit") {
+    return value;
+  }
+  if (value === "other") return "other";
+  return "other";
+}
 
 export function mapDefaultCurrency(value: string | null | undefined): CurrencyCode {
   const u = (value ?? "").trim().toUpperCase();
@@ -106,8 +111,8 @@ export function mapCashApiPayload(payload: CashApiSuccessPayload) {
     };
   });
 
-  const distribution: CashDistributionItem[] = payload.distribution.map((d, i) => ({
-    key: DISTRIBUTION_KEYS[i % DISTRIBUTION_KEYS.length]!,
+  const distribution: CashDistributionItem[] = payload.distribution.map((d) => ({
+    key: asDistributionKey(d.key),
     label: d.label || "Sin etiqueta",
     amount: d.amount,
   }));
@@ -125,6 +130,10 @@ export function mapCashApiPayload(payload: CashApiSuccessPayload) {
     description: f.description || "—",
     type: f.type === "payment" ? "Egreso" : "Ingreso",
     amount: Math.abs(Number(f.amount) || 0),
+    computedStatus:
+      f.computedStatus === "overdue" || f.computedStatus === "upcoming"
+        ? f.computedStatus
+        : undefined,
   }));
 
   return {

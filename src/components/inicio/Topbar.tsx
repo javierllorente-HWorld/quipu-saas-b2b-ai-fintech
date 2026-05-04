@@ -8,10 +8,15 @@ import {
   IconLogout,
   IconMenu,
 } from "./icons";
-import { getDemoSession, signOutDemo } from "@/lib/demoAuth";
+import { signOutDemo } from "@/lib/demoAuth";
 import { useRouter } from "next/navigation";
 import { mockDashboardByCompanyId } from "@/components/inicio/mock";
 import { RecentActivityDropdown } from "@/components/inicio/RecentActivityDropdown";
+
+/** Alineado con APIs demo; priorizar esta org en la lista de `/api/organizations`. */
+const DEMO_ORGANIZATION_ID = "7356d336-7207-415d-87e2-d05fd6e70efe";
+
+// TODO: centralizar organization/user en un provider global para evitar refetch al navegar.
 
 export type TopbarProps = {
   companies: Company[];
@@ -19,6 +24,33 @@ export type TopbarProps = {
   onCompanyChange: (companyId: string) => void;
   onOpenSidebar: () => void;
 };
+
+type MeApiUser = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  status: string;
+};
+
+type OrgApiRow = {
+  id: string;
+  name: string;
+  default_currency?: string | null;
+};
+
+type LoadState = "loading" | "success" | "error";
+
+function initialsFromName(label: string): string {
+  const parts = label.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? "U";
+  const second = parts[1]?.[0] ?? "";
+  return (first + second).toUpperCase();
+}
+
+function toCurrencyCode(value: string | null | undefined): "ARS" | "USD" {
+  return (value ?? "").trim().toUpperCase() === "USD" ? "USD" : "ARS";
+}
 
 export function Topbar({
   companies,
@@ -29,16 +61,81 @@ export function Topbar({
   void onCompanyChange;
   const router = useRouter();
   const active = companies.find((c) => c.id === activeCompanyId) ?? companies[0];
-  const dashboard = mockDashboardByCompanyId[activeCompanyId];
-  const session = React.useMemo(() => getDemoSession(), []);
-  const userName = session?.user?.name ?? "Usuario";
-  const userRole = session?.user?.role ?? "";
-  const initials = React.useMemo(() => {
-    const parts = userName.trim().split(/\s+/).filter(Boolean);
-    const first = parts[0]?.[0] ?? "U";
-    const second = parts[1]?.[0] ?? "";
-    return (first + second).toUpperCase();
-  }, [userName]);
+
+  const [orgState, setOrgState] = React.useState<LoadState>("loading");
+  const [orgRow, setOrgRow] = React.useState<OrgApiRow | null>(null);
+  const [meState, setMeState] = React.useState<LoadState>("loading");
+  const [meUser, setMeUser] = React.useState<MeApiUser | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const orgFetch = fetch("/api/organizations", { cache: "no-store" }).then((r) => r.json());
+    const meFetch = fetch("/api/me", { cache: "no-store" }).then((r) => r.json());
+
+    Promise.all([orgFetch, meFetch])
+      .then(([orgBody, meBody]) => {
+        if (cancelled) return;
+
+        const rows = orgBody?.organizations as OrgApiRow[] | undefined;
+        const picked =
+          Array.isArray(rows) && rows.length > 0
+            ? rows.find((o) => o.id === DEMO_ORGANIZATION_ID) ?? rows[0]
+            : null;
+        if (orgBody?.ok === true && picked?.id && typeof picked.name === "string" && picked.name.trim()) {
+          setOrgRow(picked);
+          setOrgState("success");
+        } else {
+          setOrgRow(null);
+          setOrgState("error");
+        }
+
+        if (
+          meBody?.ok === true &&
+          meBody.user &&
+          typeof meBody.user.fullName === "string" &&
+          meBody.user.fullName.trim()
+        ) {
+          setMeUser(meBody.user);
+          setMeState("success");
+        } else {
+          setMeUser(null);
+          setMeState("error");
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setOrgRow(null);
+        setOrgState("error");
+        setMeUser(null);
+        setMeState("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const companyLabel =
+    orgState === "loading"
+      ? "Cargando empresa..."
+      : orgState === "success" && orgRow?.name?.trim()
+        ? orgRow.name.trim()
+        : "Empresa";
+
+  const userName =
+    meState === "loading"
+      ? "Cargando usuario..."
+      : meState === "success" && meUser?.fullName?.trim()
+        ? meUser.fullName.trim()
+        : "Usuario";
+
+  const activityCompanyId = orgRow?.id ?? activeCompanyId ?? active?.id ?? "";
+  const dashboard = mockDashboardByCompanyId[activityCompanyId];
+
+  const displayCurrency =
+    orgState === "success" && orgRow ? toCurrencyCode(orgRow.default_currency) : "ARS";
+
+  const initials = React.useMemo(() => initialsFromName(userName), [userName]);
 
   const notificationsRef = React.useRef<HTMLDivElement | null>(null);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -110,7 +207,7 @@ export function Topbar({
             className="inline-flex h-10 items-center rounded-2xl border border-border bg-card px-4 text-sm font-medium text-foreground shadow-sm"
             aria-label="Empresa"
           >
-            {active?.name ?? "Empresa"}
+            {companyLabel}
           </div>
         </div>
 
@@ -141,7 +238,7 @@ export function Topbar({
               >
                 <RecentActivityDropdown
                   items={dashboard?.activity ?? []}
-                  currency={active?.currency ?? "ARS"}
+                  currency={displayCurrency}
                 />
               </div>
             ) : null}
@@ -180,8 +277,12 @@ export function Topbar({
                     <div className="truncate text-sm font-semibold text-foreground">
                       {userName}
                     </div>
-                    {userRole ? (
-                      <div className="text-xs text-muted-foreground">{userRole}</div>
+                    {meState === "loading" ? (
+                      <div className="text-xs text-muted-foreground">Cargando...</div>
+                    ) : meState === "error" ? (
+                      <div className="text-xs text-muted-foreground">Rol</div>
+                    ) : meUser?.role?.trim() ? (
+                      <div className="text-xs text-muted-foreground">{meUser.role.trim()}</div>
                     ) : null}
                   </div>
                 </div>
