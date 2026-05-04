@@ -180,6 +180,7 @@ export default function CobrosPage() {
 
                   <DebtAgingDonut
                     title="Antigüedad de deuda"
+                    subtitle="Distribución de facturas pendientes según días de vencimiento."
                     items={receivablesView.aging.items}
                     total={receivablesView.aging.total}
                     currency={displayCurrency}
