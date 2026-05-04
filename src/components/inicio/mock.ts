@@ -40,6 +40,8 @@ export type AlertItem = {
 
 export type UpcomingItemType = "Cobro" | "Pago";
 
+export type UpcomingComputedStatus = "overdue" | "upcoming";
+
 export type UpcomingItem = {
   id: string;
   type: UpcomingItemType;
@@ -47,6 +49,7 @@ export type UpcomingItem = {
   date: string; // ISO yyyy-mm-dd
   counterparty: string; // cliente/proveedor
   amount: number;
+  computedStatus?: UpcomingComputedStatus;
 };
 
 export type ActivityItem = {

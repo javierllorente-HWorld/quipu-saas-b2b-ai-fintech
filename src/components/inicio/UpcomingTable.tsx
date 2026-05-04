@@ -50,8 +50,23 @@ export function UpcomingTable({ items, currency }: UpcomingTableProps) {
                 const signedAmount = isCobro ? row.amount : -row.amount;
                 return (
                   <tr key={row.id} className="hover:bg-black/[0.02]">
-                    <td className="py-3 pr-4 text-muted-foreground">
-                      {formatShortDate(row.date)}
+                    <td className="py-3 pr-4">
+                      <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                        <span
+                          className={
+                            row.computedStatus === "overdue"
+                              ? "font-medium text-rose-700"
+                              : ""
+                          }
+                        >
+                          {formatShortDate(row.date)}
+                        </span>
+                        {row.computedStatus === "overdue" ? (
+                          <span className="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800 ring-1 ring-rose-100">
+                            Vencido
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                     <td className="py-3 pr-4">
                       <span
