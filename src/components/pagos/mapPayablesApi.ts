@@ -115,6 +115,7 @@ export function mapPayablesApiPayload(payload: PayablesApiSuccessPayload) {
   const calendarPoints: PaymentsCalendarPoint[] = payload.calendar.map((row, idx) => {
     const iso = row.date && /^\d{4}-\d{2}-\d{2}/.test(row.date) ? row.date.slice(0, 10) : "";
     return {
+      dateIso: iso || null,
       label: iso ? calendarPointLabel(iso) : `Día ${idx + 1}`,
       scheduled: row.scheduledAmount,
       paid: row.paidAmount,

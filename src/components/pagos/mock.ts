@@ -15,6 +15,7 @@ export type CalendarRangeKey = "7d" | "30d" | "90d" | "calendar";
 
 export type PaymentsCalendarPoint = {
   label: string; // e.g. 28 May
+  dateIso?: string | null; // ISO yyyy-mm-dd cuando viene de la API
   scheduled: number;
   paid: number;
   overdue: number;
