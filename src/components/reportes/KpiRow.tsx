@@ -12,6 +12,7 @@ export type ReportesKpiRowProps = {
 };
 
 function formatKpiValue(kpi: ReportesKpi, currency: CurrencyCode) {
+  if (kpi.value == null) return "—";
   return kpi.format === "money"
     ? formatMoney(kpi.value, currency)
     : `${kpi.value.toFixed(1)}%`;

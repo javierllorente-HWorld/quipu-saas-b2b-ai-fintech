@@ -3,8 +3,11 @@
 import * as React from "react";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
-import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
+import {
+  topbarCompanyLoading,
+  topbarCompanyNeutral,
+} from "@/components/shell/topbarCompanyPlaceholders";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { ReportesKpiRow } from "@/components/reportes/KpiRow";
 import { IncomeExpenseChart } from "@/components/reportes/IncomeExpenseChart";
@@ -87,13 +90,15 @@ export default function ReportesPage() {
         },
       ];
     }
-    return mockCompanies;
-  }, [reportsView]);
+    if (reportsLoading) return [topbarCompanyLoading];
+    return [topbarCompanyNeutral];
+  }, [reportsView, reportsLoading]);
 
   const activeCompanyId =
-    reportsView?.organization?.id ?? mockCompanies[0]?.id ?? "acme-ar";
+    reportsView?.organization?.id ??
+    (reportsLoading ? topbarCompanyLoading.id : topbarCompanyNeutral.id);
 
-  const displayCurrency = reportsView?.currency ?? mockCompanies[0]?.currency ?? "ARS";
+  const displayCurrency = reportsView?.currency ?? "ARS";
 
   return (
     <div className="qp-shell">

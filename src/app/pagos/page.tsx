@@ -3,8 +3,11 @@
 import * as React from "react";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
-import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
+import {
+  topbarCompanyLoading,
+  topbarCompanyNeutral,
+} from "@/components/shell/topbarCompanyPlaceholders";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { PagosKpiRow } from "@/components/pagos/KpiRow";
 import { PaymentsCalendarChart } from "@/components/pagos/PaymentsCalendarChart";
@@ -80,13 +83,15 @@ export default function PagosPage() {
         },
       ];
     }
-    return mockCompanies;
-  }, [payablesView]);
+    if (payablesLoading) return [topbarCompanyLoading];
+    return [topbarCompanyNeutral];
+  }, [payablesView, payablesLoading]);
 
   const activeCompanyId =
-    payablesView?.organization?.id ?? mockCompanies[0]?.id ?? "acme-ar";
+    payablesView?.organization?.id ??
+    (payablesLoading ? topbarCompanyLoading.id : topbarCompanyNeutral.id);
 
-  const displayCurrency = payablesView?.currency ?? mockCompanies[0]?.currency ?? "ARS";
+  const displayCurrency = payablesView?.currency ?? "ARS";
 
   return (
     <div className="qp-shell">

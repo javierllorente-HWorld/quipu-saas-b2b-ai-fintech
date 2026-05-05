@@ -19,7 +19,7 @@ export type ReportsApiSuccessPayload = {
     incomeYtd: number;
     expensesYtd: number;
     operatingMarginPct: number;
-    monthlyVariationPct: number;
+    monthlyVariationPct: number | null;
   };
   incomeExpense: Array<{
     month: string;
@@ -32,7 +32,14 @@ export type ReportsApiSuccessPayload = {
     value: number;
     unit: "percent" | "currency";
   }>;
-  recentReports: unknown[];
+  recentReports?: Array<{
+    id: string;
+    name: string;
+    periodLabel: string;
+    generatedAt: string | null;
+    format: string;
+    storageUrl: string;
+  }>;
 };
 
 function mapDefaultCurrency(value: string | null | undefined): CurrencyCode {
@@ -70,6 +77,35 @@ function mapKeyIndicators(rows: ReportsApiSuccessPayload["keyIndicators"], curre
   }));
 }
 
+function pickString(o: Record<string, unknown>, ...keys: string[]): string {
+  for (const k of keys) {
+    const v = o[k];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return "";
+}
+
+function formatReportGenerated(value: unknown): string {
+  if (value == null) return "—";
+  if (value instanceof Date) {
+    return value.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+  }
+  if (typeof value === "string" && value.length > 0) {
+    const d = new Date(value.includes("T") ? value : `${value.slice(0, 10)}T12:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+    }
+    return value.slice(0, 16);
+  }
+  return "—";
+}
+
+function mapReportFormat(fmt: unknown): RecentReportRow["formato"] {
+  const u = String(fmt ?? "").trim().toUpperCase();
+  if (u === "XLSX" || u === "EXCEL") return "XLSX";
+  return "PDF";
+}
+
 function mapRecentReports(raw: unknown[]): RecentReportRow[] {
   if (!Array.isArray(raw) || raw.length === 0) return [];
   const out: RecentReportRow[] = [];
@@ -77,10 +113,10 @@ function mapRecentReports(raw: unknown[]): RecentReportRow[] {
     if (!item || typeof item !== "object") continue;
     const o = item as Record<string, unknown>;
     const id = typeof o.id === "string" ? o.id : String(o.id ?? "");
-    const nombre = typeof o.nombre === "string" ? o.nombre : typeof o.name === "string" ? o.name : "Reporte";
-    const periodo = typeof o.periodo === "string" ? o.periodo : "—";
-    const generado = typeof o.generado === "string" ? o.generado : "—";
-    const formato = o.formato === "XLSX" ? "XLSX" : "PDF";
+    const nombre = pickString(o, "nombre", "name") || "Reporte";
+    const periodo = pickString(o, "periodo", "periodLabel", "period_label") || "—";
+    const generado = formatReportGenerated(o.generado ?? o.generatedAt ?? o.generated_at);
+    const formato = mapReportFormat(o.formato ?? o.format);
     if (id) out.push({ id, nombre, periodo, generado, formato });
   }
   return out;
@@ -115,8 +151,11 @@ export function mapReportsApiPayload(payload: ReportsApiSuccessPayload) {
       key: "variacionMensual",
       label: "Variación mensual",
       format: "percent",
-      value: payload.kpis.monthlyVariationPct,
-      hint: "Serie mensual (placeholder)",
+      value: payload.kpis.monthlyVariationPct ?? null,
+      hint:
+        payload.kpis.monthlyVariationPct == null
+          ? "Sin datos comparativos suficientes"
+          : "Flujo neto vs mes anterior",
     },
   ];
 

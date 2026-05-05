@@ -3,8 +3,11 @@
 import * as React from "react";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
-import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
+import {
+  topbarCompanyLoading,
+  topbarCompanyNeutral,
+} from "@/components/shell/topbarCompanyPlaceholders";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { TesoreriaKpiRow } from "@/components/tesoreria/KpiRow";
 import { TreasuryBankBalancesTable } from "@/components/tesoreria/BankBalancesTable";
@@ -78,13 +81,15 @@ export default function TesoreriaPage() {
         },
       ];
     }
-    return mockCompanies;
-  }, [treasuryView]);
+    if (treasuryLoading) return [topbarCompanyLoading];
+    return [topbarCompanyNeutral];
+  }, [treasuryView, treasuryLoading]);
 
   const activeCompanyId =
-    treasuryView?.organization?.id ?? mockCompanies[0]?.id ?? "acme-ar";
+    treasuryView?.organization?.id ??
+    (treasuryLoading ? topbarCompanyLoading.id : topbarCompanyNeutral.id);
 
-  const displayCurrency = treasuryView?.currency ?? mockCompanies[0]?.currency ?? "ARS";
+  const displayCurrency = treasuryView?.currency ?? "ARS";
 
   return (
     <div className="qp-shell">

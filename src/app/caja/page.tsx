@@ -3,8 +3,11 @@
 import * as React from "react";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
-import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
+import {
+  topbarCompanyLoading,
+  topbarCompanyNeutral,
+} from "@/components/shell/topbarCompanyPlaceholders";
 import { CajaKpiRow } from "@/components/caja/KpiRow";
 import { CashDistribution } from "@/components/caja/CashDistribution";
 import { UpcomingMovementsTable } from "@/components/caja/UpcomingMovementsTable";
@@ -17,6 +20,20 @@ import {
   mapCashApiPayload,
   type CashApiSuccessPayload,
 } from "@/components/caja/mapCashApi";
+
+async function fetchCashView(): Promise<ReturnType<typeof mapCashApiPayload>> {
+  const res = await fetch("/api/cash", { cache: "no-store" });
+  const body = (await res.json()) as CashApiSuccessPayload & {
+    ok?: boolean;
+    error?: string;
+  };
+  if (!res.ok || body.ok !== true) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "No se pudieron cargar los datos de caja."
+    );
+  }
+  return mapCashApiPayload(body as CashApiSuccessPayload);
+}
 
 export default function CajaPage() {
   useRequireDemoAuth();
@@ -35,6 +52,17 @@ export default function CajaPage() {
     onAfterNavigate: () => setSidebarOpen(false),
   });
 
+  const refetchCash = React.useCallback(async () => {
+    const view = await fetchCashView();
+    setCashView(view);
+    setCashError(null);
+  }, []);
+
+  const handleMovementSaved = React.useCallback(async () => {
+    await refetchCash();
+    setSavedToast(true);
+  }, [refetchCash]);
+
   React.useEffect(() => {
     if (!savedToast) return;
     const t = window.setTimeout(() => setSavedToast(false), 2600);
@@ -46,19 +74,10 @@ export default function CajaPage() {
     setCashLoading(true);
     setCashError(null);
 
-    fetch("/api/cash", { cache: "no-store" })
-      .then(async (res) => {
-        const body = (await res.json()) as CashApiSuccessPayload & {
-          ok?: boolean;
-          error?: string;
-        };
-        if (!res.ok || body.ok !== true) {
-          throw new Error(
-            typeof body.error === "string" ? body.error : "No se pudieron cargar los datos de caja."
-          );
-        }
+    fetchCashView()
+      .then((view) => {
         if (cancelled) return;
-        setCashView(mapCashApiPayload(body as CashApiSuccessPayload));
+        setCashView(view);
         setCashError(null);
       })
       .catch((e: unknown) => {
@@ -85,13 +104,27 @@ export default function CajaPage() {
         },
       ];
     }
-    return mockCompanies;
-  }, [cashView]);
+    if (cashLoading) return [topbarCompanyLoading];
+    return [topbarCompanyNeutral];
+  }, [cashView, cashLoading]);
 
   const activeCompanyId =
-    cashView?.organization?.id ?? mockCompanies[0]?.id ?? "acme-ar";
+    cashView?.organization?.id ??
+    (cashLoading ? topbarCompanyLoading.id : topbarCompanyNeutral.id);
 
-  const displayCurrency = cashView?.currency ?? mockCompanies[0]?.currency ?? "ARS";
+  const displayCurrency = cashView?.currency ?? "ARS";
+
+  const bankAccountOptions = React.useMemo(() => {
+    if (!cashView?.bankBalances?.length) return [];
+    const fmt = new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: displayCurrency === "USD" ? "USD" : "ARS",
+    });
+    return cashView.bankBalances.map((b) => ({
+      id: b.id,
+      label: `${b.bank} — ${fmt.format(b.amount)}`,
+    }));
+  }, [cashView, displayCurrency]);
 
   return (
     <div className="qp-shell">
@@ -207,7 +240,8 @@ export default function CajaPage() {
       <RegisterMovementModal
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
-        onSaved={() => setSavedToast(true)}
+        bankAccounts={bankAccountOptions}
+        onSaved={handleMovementSaved}
       />
     </div>
   );

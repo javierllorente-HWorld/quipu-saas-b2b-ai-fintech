@@ -8,6 +8,10 @@ import { UpcomingTable } from "@/components/inicio/UpcomingTable";
 import type { Company, CurrencyCode, Kpi, UpcomingItem } from "@/components/inicio/mock";
 import { IconSparkles, IconX } from "@/components/inicio/icons";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
+import {
+  topbarCompanyLoading,
+  topbarCompanyNeutral,
+} from "@/components/shell/topbarCompanyPlaceholders";
 import { useRequireDemoAuth } from "@/components/shell/useRequireDemoAuth";
 import { useRouter } from "next/navigation";
 
@@ -122,18 +126,6 @@ function companyFromOrg(org: DashboardApiOrg | null | undefined): Company {
   };
 }
 
-const loadingCompany: Company = {
-  id: "__loading__",
-  name: "Cargando…",
-  currency: "ARS",
-};
-
-const fallbackCompany: Company = {
-  id: "__fallback__",
-  name: "Empresa",
-  currency: "ARS",
-};
-
 export default function InicioPage() {
   useRequireDemoAuth();
 
@@ -141,7 +133,7 @@ export default function InicioPage() {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [company, setCompany] = React.useState<Company>(loadingCompany);
+  const [company, setCompany] = React.useState<Company>(topbarCompanyLoading);
   const [kpis, setKpis] = React.useState<Kpi[]>([]);
   const [upcoming, setUpcoming] = React.useState<UpcomingItem[]>([]);
 
@@ -158,7 +150,7 @@ export default function InicioPage() {
         if (cancelled) return;
         if (!res.ok || !json.ok) {
           setError(json.error ?? "No se pudo cargar el panel.");
-          setCompany(fallbackCompany);
+          setCompany(topbarCompanyNeutral);
           setKpis(mapApiKpis({}));
           setUpcoming([]);
           return;
@@ -169,7 +161,7 @@ export default function InicioPage() {
       } catch {
         if (cancelled) return;
         setError("No se pudo conectar con el servidor.");
-        setCompany(fallbackCompany);
+        setCompany(topbarCompanyNeutral);
         setKpis(mapApiKpis({}));
         setUpcoming([]);
       } finally {

@@ -3,8 +3,11 @@
 import * as React from "react";
 import { Sidebar } from "@/components/inicio/Sidebar";
 import { Topbar } from "@/components/inicio/Topbar";
-import { mockCompanies } from "@/components/inicio/mock";
 import { IconX } from "@/components/inicio/icons";
+import {
+  topbarCompanyLoading,
+  topbarCompanyNeutral,
+} from "@/components/shell/topbarCompanyPlaceholders";
 import { useSidebarNavigate } from "@/components/shell/useSidebarNavigate";
 import { CobrosKpiRow } from "@/components/cobros/KpiRow";
 import { DebtAgingDonut } from "@/components/cobros/DebtAgingDonut";
@@ -79,13 +82,15 @@ export default function CobrosPage() {
         },
       ];
     }
-    return mockCompanies;
-  }, [receivablesView]);
+    if (receivablesLoading) return [topbarCompanyLoading];
+    return [topbarCompanyNeutral];
+  }, [receivablesView, receivablesLoading]);
 
   const activeCompanyId =
-    receivablesView?.organization?.id ?? mockCompanies[0]?.id ?? "acme-ar";
+    receivablesView?.organization?.id ??
+    (receivablesLoading ? topbarCompanyLoading.id : topbarCompanyNeutral.id);
 
-  const displayCurrency = receivablesView?.currency ?? mockCompanies[0]?.currency ?? "ARS";
+  const displayCurrency = receivablesView?.currency ?? "ARS";
 
   return (
     <div className="qp-shell">

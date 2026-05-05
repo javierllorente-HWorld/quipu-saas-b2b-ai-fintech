@@ -10,7 +10,7 @@ export type ReportesKpi = {
   key: ReportesKpiKey;
   label: string;
   format: "money" | "percent";
-  value: number;
+  value: number | null;
   deltaPct?: number;
   hint?: string;
 };

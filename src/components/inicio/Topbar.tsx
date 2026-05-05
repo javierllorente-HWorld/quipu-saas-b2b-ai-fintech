@@ -10,13 +10,13 @@ import {
 } from "./icons";
 import { signOutDemo } from "@/lib/demoAuth";
 import { useRouter } from "next/navigation";
-import { mockDashboardByCompanyId } from "@/components/inicio/mock";
+import type { ActivityItem } from "@/components/inicio/mock";
 import { RecentActivityDropdown } from "@/components/inicio/RecentActivityDropdown";
 
 /** Alineado con APIs demo; priorizar esta org en la lista de `/api/organizations`. */
 const DEMO_ORGANIZATION_ID = "7356d336-7207-415d-87e2-d05fd6e70efe";
 
-// TODO: centralizar organization/user en un provider global para evitar refetch al navegar.
+// TODO: centralizar organization/user en un provider global para evitar refetch y fallbacks duplicados.
 
 export type TopbarProps = {
   companies: Company[];
@@ -52,6 +52,30 @@ function toCurrencyCode(value: string | null | undefined): "ARS" | "USD" {
   return (value ?? "").trim().toUpperCase() === "USD" ? "USD" : "ARS";
 }
 
+type CashRecentMovement = {
+  id: string;
+  date: string | null;
+  description: string;
+  bankAccount?: string;
+  amount: number;
+  direction: string;
+};
+
+function mapRecentMovementToActivity(m: CashRecentMovement): ActivityItem {
+  const dateStr = m.date && /^\d{4}-\d{2}-\d{2}/.test(m.date) ? m.date.slice(0, 10) : null;
+  const timestamp = dateStr ? `${dateStr}T12:00:00.000Z` : new Date().toISOString();
+  const desc = (m.description ?? "").trim();
+  const bank = (m.bankAccount ?? "").trim();
+  const description = desc && bank ? `${desc} (${bank})` : desc || bank || "Movimiento";
+  return {
+    id: m.id,
+    timestamp,
+    description,
+    amount: Math.abs(Number(m.amount) || 0),
+    type: m.direction === "out" ? "Egreso" : "Ingreso",
+  };
+}
+
 export function Topbar({
   companies,
   activeCompanyId,
@@ -59,13 +83,16 @@ export function Topbar({
   onOpenSidebar,
 }: TopbarProps) {
   void onCompanyChange;
+  void activeCompanyId;
+  void companies;
   const router = useRouter();
-  const active = companies.find((c) => c.id === activeCompanyId) ?? companies[0];
 
   const [orgState, setOrgState] = React.useState<LoadState>("loading");
   const [orgRow, setOrgRow] = React.useState<OrgApiRow | null>(null);
   const [meState, setMeState] = React.useState<LoadState>("loading");
   const [meUser, setMeUser] = React.useState<MeApiUser | null>(null);
+  const [cashActivityState, setCashActivityState] = React.useState<LoadState>("loading");
+  const [cashActivityItems, setCashActivityItems] = React.useState<ActivityItem[]>([]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -115,6 +142,34 @@ export function Topbar({
     };
   }, []);
 
+  React.useEffect(() => {
+    let cancelled = false;
+    setCashActivityState("loading");
+    fetch("/api/cash", { cache: "no-store" })
+      .then(async (r) => {
+        const body = (await r.json().catch(() => null)) as {
+          ok?: boolean;
+          recentMovements?: CashRecentMovement[];
+        } | null;
+        if (cancelled) return;
+        if (r.ok && body?.ok === true && Array.isArray(body.recentMovements)) {
+          setCashActivityItems(body.recentMovements.map(mapRecentMovementToActivity));
+          setCashActivityState("success");
+        } else {
+          setCashActivityItems([]);
+          setCashActivityState("error");
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCashActivityItems([]);
+        setCashActivityState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const companyLabel =
     orgState === "loading"
       ? "Cargando empresa..."
@@ -128,9 +183,6 @@ export function Topbar({
       : meState === "success" && meUser?.fullName?.trim()
         ? meUser.fullName.trim()
         : "Usuario";
-
-  const activityCompanyId = orgRow?.id ?? activeCompanyId ?? active?.id ?? "";
-  const dashboard = mockDashboardByCompanyId[activityCompanyId];
 
   const displayCurrency =
     orgState === "success" && orgRow ? toCurrencyCode(orgRow.default_currency) : "ARS";
@@ -237,8 +289,10 @@ export function Topbar({
                 aria-label="Últimos movimientos"
               >
                 <RecentActivityDropdown
-                  items={dashboard?.activity ?? []}
+                  items={cashActivityItems}
                   currency={displayCurrency}
+                  loading={cashActivityState === "loading"}
+                  loadError={cashActivityState === "error"}
                 />
               </div>
             ) : null}
