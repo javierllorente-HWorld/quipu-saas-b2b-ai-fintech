@@ -20,7 +20,9 @@ function StatusPill({ status }: { status: RecentPayment["status"] }) {
       ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
       : status === "Vencido"
         ? "bg-rose-50 text-rose-700 ring-rose-100"
-        : "bg-slate-50 text-slate-700 ring-slate-100";
+        : status === "Sin estado"
+          ? "bg-zinc-50 text-zinc-600 ring-zinc-100"
+          : "bg-slate-50 text-slate-700 ring-slate-100";
   return (
     <span
       className={[
@@ -60,7 +62,7 @@ export function RecentPaymentsTable({ title, items, currency }: RecentPaymentsTa
               {pagedItems.map((row) => (
                 <tr key={row.id} className="hover:bg-black/[0.02]">
                   <td className="py-3 pr-4 text-muted-foreground">
-                    {formatShortDate(row.date)}
+                    {row.date ? formatShortDate(row.date) : "Sin fecha"}
                   </td>
                   <td className="py-3 pr-4 font-medium text-foreground">{row.vendor}</td>
                   <td className="py-3 pr-4 text-muted-foreground">{row.method}</td>

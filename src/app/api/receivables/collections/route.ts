@@ -22,6 +22,13 @@ function parseCollectionDate(raw: unknown): string | null {
   return d.toISOString().slice(0, 10);
 }
 
+function orgCurrencyFromRow(row: { default_currency?: unknown } | undefined): string {
+  const raw = row?.default_currency;
+  if (typeof raw !== "string") return "ARS";
+  const c = raw.trim().toUpperCase();
+  return c.length > 0 ? c : "ARS";
+}
+
 function buildMovementDescription(args: {
   customerName?: string;
   invoiceNumber?: string;
@@ -100,6 +107,15 @@ export async function POST(request: Request) {
     });
 
     const result = await withTransaction(async (client) => {
+      const orgRes = await client.query(
+        `SELECT default_currency
+         FROM organizations
+         WHERE id = $1::uuid`,
+        [ORGANIZATION_ID],
+      );
+      const orgRow = orgRes.rows[0] as { default_currency?: unknown } | undefined;
+      const collectionCurrency = orgCurrencyFromRow(orgRow);
+
       const lockRes = await client.query(
         `SELECT id
          FROM bank_accounts
@@ -135,7 +151,7 @@ export async function POST(request: Request) {
           collectionDate,
           finalDescription,
           amount,
-          "ARS",
+          collectionCurrency,
           "in",
           "collections",
           "confirmed",
@@ -180,7 +196,7 @@ export async function POST(request: Request) {
           const nextStatus = Number.isFinite(invAmount) && amount >= invAmount ? "paid" : "pending";
 
           if (hasNotes) {
-            const noteLine = `Cobro ${collectionDate}: ARS ${amount}${customerName ? ` (${customerName})` : ""}`;
+            const noteLine = `Cobro ${collectionDate}: ${collectionCurrency} ${amount}${customerName ? ` (${customerName})` : ""}`;
             await client.query(
               `UPDATE invoices
                SET status = $1,

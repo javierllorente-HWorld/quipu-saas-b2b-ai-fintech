@@ -44,7 +44,7 @@ export function ScheduledTransfersTable({
               {pagedItems.map((row) => (
                 <tr key={row.id} className="hover:bg-black/[0.02]">
                   <td className="py-3 pr-4 text-muted-foreground">
-                    {formatShortDate(row.date)}
+                    {row.date ? formatShortDate(row.date) : "Sin fecha"}
                   </td>
                   <td className="py-3 pr-4 font-medium text-foreground">
                     {row.account}

@@ -86,18 +86,20 @@ function pickString(o: Record<string, unknown>, ...keys: string[]): string {
 }
 
 function formatReportGenerated(value: unknown): string {
-  if (value == null) return "—";
+  if (value == null) return "Sin fecha";
+  let d: Date | null = null;
   if (value instanceof Date) {
-    return value.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+    d = value;
+  } else if (typeof value === "string" && value.trim().length > 0) {
+    const raw = value.trim();
+    const parsed = new Date(raw.includes("T") ? raw : `${raw.slice(0, 10)}T12:00:00`);
+    if (!Number.isNaN(parsed.getTime())) d = parsed;
   }
-  if (typeof value === "string" && value.length > 0) {
-    const d = new Date(value.includes("T") ? value : `${value.slice(0, 10)}T12:00:00`);
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
-    }
-    return value.slice(0, 16);
-  }
-  return "—";
+  if (!d || Number.isNaN(d.getTime())) return "Sin fecha";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(d.getFullYear());
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 function mapReportFormat(fmt: unknown): RecentReportRow["formato"] {
@@ -160,6 +162,10 @@ export function mapReportsApiPayload(payload: ReportsApiSuccessPayload) {
   ];
 
   const rows = payload.incomeExpense ?? [];
+  const hasIncomeExpenseMovement = rows.some(
+    (r) => Number(r.income) > 0 || Number(r.expenses) > 0,
+  );
+
   const toPoints = (subset: typeof rows): IncomeExpensePoint[] =>
     subset.map((r) => ({
       label: monthShortLabel(r.month),
@@ -173,16 +179,17 @@ export function mapReportsApiPayload(payload: ReportsApiSuccessPayload) {
   const points6 = toPoints(rows.slice(-6));
   const pointsYtd = toPoints(ytdRows.length > 0 ? ytdRows : rows.slice(-Math.min(6, rows.length)));
 
-  const emptyChart: IncomeExpensePoint[] = [{ label: "—", ingresos: 0, egresos: 0 }];
-  const safe12 = points12.length > 0 ? points12 : emptyChart;
-  const safe6 = points6.length > 0 ? points6 : safe12;
-  const safeYtd = pointsYtd.length > 0 ? pointsYtd : safe12;
-
-  const datasets: IncomeExpenseDataset[] = [
-    { key: "YTD", points: safeYtd },
-    { key: "6M", points: safe6 },
-    { key: "12M", points: safe12 },
-  ];
+  const datasets: IncomeExpenseDataset[] = hasIncomeExpenseMovement
+    ? [
+        { key: "YTD", points: pointsYtd },
+        { key: "6M", points: points6 },
+        { key: "12M", points: points12 },
+      ]
+    : [
+        { key: "YTD", points: [] },
+        { key: "6M", points: [] },
+        { key: "12M", points: [] },
+      ];
 
   const keyIndicators = mapKeyIndicators(payload.keyIndicators ?? [], currency);
   const recentReports = mapRecentReports(payload.recentReports ?? []);

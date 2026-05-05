@@ -28,7 +28,9 @@ export function UpcomingPaymentsTable({
     if (items.length === 0) return true;
     const useful = items.filter((i) => {
       const v = (i.vendor ?? "").trim();
-      return v.length > 0 && v !== "—";
+      return (
+        v.length > 0 && v !== "—" && v !== "Proveedor no informado"
+      );
     }).length;
     // Si casi todos vienen sin proveedor, ocultamos la columna.
     return useful / items.length >= 0.25;
@@ -56,7 +58,7 @@ export function UpcomingPaymentsTable({
               {pagedItems.map((row) => (
                 <tr key={row.id} className="hover:bg-black/[0.02]">
                   <td className="py-3 pr-4 text-muted-foreground">
-                    {formatShortDate(row.date)}
+                    {row.date ? formatShortDate(row.date) : "Sin fecha"}
                   </td>
                   {showVendorColumn ? (
                     <td className="py-3 pr-4 font-medium text-foreground">

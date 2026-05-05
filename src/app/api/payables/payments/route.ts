@@ -22,6 +22,13 @@ function parsePaymentDate(raw: unknown): string | null {
   return d.toISOString().slice(0, 10);
 }
 
+function orgCurrencyFromRow(row: { default_currency?: unknown } | undefined): string {
+  const raw = row?.default_currency;
+  if (typeof raw !== "string") return "ARS";
+  const c = raw.trim().toUpperCase();
+  return c.length > 0 ? c : "ARS";
+}
+
 function buildPaymentDescription(vendorName: string | undefined, description: string): string {
   const desc = description.trim();
   const vendor = (vendorName ?? "").trim();
@@ -167,6 +174,15 @@ export async function POST(request: Request) {
     const cols = await detectPaymentsColumns({ query });
 
     const created = await withTransaction(async (client) => {
+      const orgRes = await client.query(
+        `SELECT default_currency
+         FROM organizations
+         WHERE id = $1::uuid`,
+        [ORGANIZATION_ID],
+      );
+      const orgRow = orgRes.rows[0] as { default_currency?: unknown } | undefined;
+      const paymentCurrency = orgCurrencyFromRow(orgRow);
+
       const vendorId = vendorName && cols.hasVendorId ? await resolveVendorId(client, vendorName) : null;
 
       const insertColumns: string[] = ["organization_id", "payment_date", "amount"];
@@ -179,7 +195,7 @@ export async function POST(request: Request) {
 
       if (cols.hasCurrency) {
         insertColumns.push("currency");
-        insertValues.push("ARS");
+        insertValues.push(paymentCurrency);
       }
 
       if (cols.hasStatus) {

@@ -56,7 +56,8 @@ function formatRowDate(point: PaymentsCalendarPoint): string {
         .trim();
     }
   }
-  return point.label || "—";
+  if (point.label?.trim()) return point.label;
+  return "Sin fecha";
 }
 
 export function PaymentsCalendarChart({

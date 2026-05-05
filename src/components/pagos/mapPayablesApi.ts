@@ -66,11 +66,9 @@ function mapDefaultCurrency(value: string | null | undefined): CurrencyCode {
   return "ARS";
 }
 
-function safeIsoDate(value: string | null | undefined): string {
+function parseIsoDateOrNull(value: string | null | undefined): string | null {
   if (value && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
-  const t = new Date();
-  t.setHours(12, 0, 0, 0);
-  return t.toISOString().slice(0, 10);
+  return null;
 }
 
 function calendarPointLabel(iso: string): string {
@@ -94,7 +92,7 @@ function mapPaymentStatus(apiStatus: string): RecentPayment["status"] {
   if (s === "paid" || s === "pagado") return "Pagado";
   if (s === "scheduled" || s === "programado") return "Programado";
   if (s === "overdue" || s === "vencido") return "Vencido";
-  return "Pagado";
+  return "Sin estado";
 }
 
 export function mapPayablesApiPayload(payload: PayablesApiSuccessPayload) {
@@ -122,11 +120,11 @@ export function mapPayablesApiPayload(payload: PayablesApiSuccessPayload) {
     },
   ];
 
-  const calendarPoints: PaymentsCalendarPoint[] = payload.calendar.map((row, idx) => {
+  const calendarPoints: PaymentsCalendarPoint[] = payload.calendar.map((row) => {
     const iso = row.date && /^\d{4}-\d{2}-\d{2}/.test(row.date) ? row.date.slice(0, 10) : "";
     return {
       dateIso: iso || null,
-      label: iso ? calendarPointLabel(iso) : `Día ${idx + 1}`,
+      label: iso ? calendarPointLabel(iso) : "Sin fecha",
       scheduled: row.scheduledAmount,
       paid: row.paidAmount,
       overdue: row.overdueAmount,
@@ -135,16 +133,16 @@ export function mapPayablesApiPayload(payload: PayablesApiSuccessPayload) {
 
   const scheduled = (payload.scheduledPayments ?? []).map((p) => ({
     id: p.id,
-    date: safeIsoDate(p.paymentDate),
-    vendor: p.vendorName?.trim() ? p.vendorName : "—",
+    date: parseIsoDateOrNull(p.paymentDate),
+    vendor: p.vendorName?.trim() || "Proveedor no informado",
     description: p.description || "—",
     amount: p.amount,
   }));
 
   const upcomingFallback: UpcomingPayment[] = payload.upcomingPayments.map((u) => ({
     id: u.id,
-    date: safeIsoDate(u.date),
-    vendor: u.vendorName || "—",
+    date: parseIsoDateOrNull(u.date),
+    vendor: u.vendorName?.trim() || "Proveedor no informado",
     description: u.description || "—",
     amount: u.amount,
   }));
@@ -153,15 +151,15 @@ export function mapPayablesApiPayload(payload: PayablesApiSuccessPayload) {
 
   const vendors: VendorRow[] = payload.vendors.map((v, idx) => ({
     id: v.vendorId ?? `sin-proveedor-${idx}`,
-    vendor: v.vendorName || "—",
+    vendor: v.vendorName?.trim() || "Proveedor no informado",
     pendingCount: v.pendingBillsCount,
     amount: v.openAmount,
   }));
 
   const recent: RecentPayment[] = payload.recentPayments.map((p) => ({
     id: p.id,
-    date: safeIsoDate(p.date),
-    vendor: p.vendorName || "—",
+    date: parseIsoDateOrNull(p.date),
+    vendor: p.vendorName?.trim() || "Proveedor no informado",
     method: p.method || "—",
     amount: p.amount,
     status: mapPaymentStatus(p.status),

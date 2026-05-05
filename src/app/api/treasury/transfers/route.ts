@@ -22,6 +22,12 @@ function parseTransferDate(raw: unknown): string | null {
   return d.toISOString().slice(0, 10);
 }
 
+function normalizeCurrencyCode(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const c = value.trim().toUpperCase();
+  return c.length > 0 ? c : null;
+}
+
 type Body = {
   transferDate?: unknown;
   amount?: unknown;
@@ -91,7 +97,7 @@ export async function POST(request: Request) {
           : [toBankAccountId, fromBankAccountId];
 
       const lockRes = await client.query(
-        `SELECT id, current_balance
+        `SELECT id, current_balance, currency
          FROM bank_accounts
          WHERE organization_id = $1::uuid
            AND status = 'active'
@@ -105,9 +111,28 @@ export async function POST(request: Request) {
         throw Object.assign(new Error("ACCOUNT_NOT_FOUND"), { code: "ACCOUNT_NOT_FOUND" });
       }
 
-      const rowById = new Map<string, { current_balance: unknown }>();
-      for (const r of lockRes.rows as { id: string; current_balance: unknown }[]) {
-        rowById.set(String(r.id), { current_balance: r.current_balance });
+      const rowById = new Map<string, { current_balance: unknown; currency: unknown }>();
+      for (const r of lockRes.rows as {
+        id: string;
+        current_balance: unknown;
+        currency: unknown;
+      }[]) {
+        rowById.set(String(r.id), { current_balance: r.current_balance, currency: r.currency });
+      }
+
+      const fromAccountCurrency = normalizeCurrencyCode(
+        rowById.get(fromBankAccountId)?.currency,
+      );
+      let transferCurrency = fromAccountCurrency;
+      if (!transferCurrency) {
+        const orgRes = await client.query(
+          `SELECT default_currency
+           FROM organizations
+           WHERE id = $1::uuid`,
+          [ORGANIZATION_ID],
+        );
+        const orgRow = orgRes.rows[0] as { default_currency?: unknown } | undefined;
+        transferCurrency = normalizeCurrencyCode(orgRow?.default_currency) ?? "ARS";
       }
 
       const fromBal = toNumber(rowById.get(fromBankAccountId)?.current_balance ?? 0);
@@ -140,7 +165,7 @@ export async function POST(request: Request) {
           transferDate,
           outMovementDesc,
           amount,
-          "ARS",
+          transferCurrency,
           "out",
           "transfers",
           "confirmed",
@@ -169,7 +194,7 @@ export async function POST(request: Request) {
           transferDate,
           inMovementDesc,
           amount,
-          "ARS",
+          transferCurrency,
           "in",
           "transfers",
           "confirmed",

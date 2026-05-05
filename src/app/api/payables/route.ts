@@ -182,7 +182,7 @@ export async function GET() {
         `SELECT
            b.id,
            b.due_date AS date,
-           COALESCE(NULLIF(TRIM(v.name), ''), 'Sin proveedor') AS vendor_name,
+           COALESCE(NULLIF(TRIM(v.name), ''), 'Proveedor no informado') AS vendor_name,
            COALESCE(TRIM(b.notes), 'Bill pendiente') AS description,
            b.amount,
            b.status
@@ -196,13 +196,13 @@ export async function GET() {
       query(
         `SELECT
            b.vendor_id,
-           COALESCE(NULLIF(TRIM(v.name), ''), 'Sin proveedor') AS vendor_name,
+           COALESCE(NULLIF(TRIM(v.name), ''), 'Proveedor no informado') AS vendor_name,
            COUNT(b.id)::int AS pending_bills_count,
            COALESCE(SUM(b.amount), 0) AS open_amount
          FROM bills b
          LEFT JOIN vendors v ON v.id = b.vendor_id AND v.organization_id = b.organization_id
          WHERE b.organization_id = $1::uuid AND b.status = 'pending'
-         GROUP BY b.vendor_id, COALESCE(NULLIF(TRIM(v.name), ''), 'Sin proveedor')
+         GROUP BY b.vendor_id, COALESCE(NULLIF(TRIM(v.name), ''), 'Proveedor no informado')
          ORDER BY open_amount DESC NULLS LAST, pending_bills_count DESC
          LIMIT 10`,
         [ORGANIZATION_ID]
@@ -211,7 +211,7 @@ export async function GET() {
         `SELECT
            p.id,
            p.payment_date AS date,
-           COALESCE(NULLIF(TRIM(v.name), ''), 'Sin proveedor') AS vendor_name,
+           COALESCE(NULLIF(TRIM(v.name), ''), 'Proveedor no informado') AS vendor_name,
            COALESCE(NULLIF(TRIM(p.method), ''), '—') AS method,
            p.amount,
            p.status

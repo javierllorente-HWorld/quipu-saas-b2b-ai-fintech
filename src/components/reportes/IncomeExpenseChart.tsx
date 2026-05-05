@@ -5,10 +5,15 @@ import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney } from "@/components/inicio/format";
 import type { IncomeExpenseDataset, IncomeExpenseRangeKey } from "./mock";
 
+const DEFAULT_CHART_EMPTY_MESSAGE =
+  "Todavía no hay movimientos suficientes para construir este gráfico.";
+
 export type IncomeExpenseChartProps = {
   title: string;
   datasets: IncomeExpenseDataset[];
   currency: CurrencyCode;
+  /** Mensaje cuando no hay puntos con ingresos/egresos reales. */
+  emptyMessage?: string;
 };
 
 function Segment({
@@ -67,8 +72,15 @@ function LegendSwatch({
   );
 }
 
-export function IncomeExpenseChart({ title, datasets, currency }: IncomeExpenseChartProps) {
+export function IncomeExpenseChart({
+  title,
+  datasets,
+  currency,
+  emptyMessage = DEFAULT_CHART_EMPTY_MESSAGE,
+}: IncomeExpenseChartProps) {
   const [range, setRange] = React.useState<IncomeExpenseRangeKey>("YTD");
+
+  const chartEmpty = datasets.every((d) => d.points.length === 0);
 
   const dataset = React.useMemo(
     () => datasets.find((d) => d.key === range) ?? datasets[0],
@@ -106,15 +118,25 @@ export function IncomeExpenseChart({ title, datasets, currency }: IncomeExpenseC
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Segment label="YTD" active={range === "YTD"} onClick={() => setRange("YTD")} />
-            <Segment label="6M" active={range === "6M"} onClick={() => setRange("6M")} />
-            <Segment label="12M" active={range === "12M"} onClick={() => setRange("12M")} />
-          </div>
+          {chartEmpty ? null : (
+            <div className="flex items-center gap-2">
+              <Segment label="YTD" active={range === "YTD"} onClick={() => setRange("YTD")} />
+              <Segment label="6M" active={range === "6M"} onClick={() => setRange("6M")} />
+              <Segment label="12M" active={range === "12M"} onClick={() => setRange("12M")} />
+            </div>
+          )}
         </div>
       </div>
 
       <div className="qp-card-content">
+        {chartEmpty ? (
+          <div
+            className="rounded-2xl border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground"
+            role="status"
+          >
+            {emptyMessage}
+          </div>
+        ) : (
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
           <div className="w-full overflow-hidden">
             <svg viewBox={`0 0 ${w} ${h}`} className="h-[256px] w-full" role="img">
@@ -211,6 +233,7 @@ export function IncomeExpenseChart({ title, datasets, currency }: IncomeExpenseC
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
