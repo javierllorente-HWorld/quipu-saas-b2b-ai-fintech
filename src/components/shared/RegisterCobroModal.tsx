@@ -6,6 +6,7 @@ export type RegisterCobroModalProps = {
   open: boolean;
   onClose: () => void;
   onSaved?: () => void;
+  bankAccounts?: { id: string; label: string }[];
 };
 
 type FormState = {
@@ -37,10 +38,30 @@ function useOnEscape(active: boolean, onEscape: () => void) {
   }, [active, onEscape]);
 }
 
-export function RegisterCobroModal({ open, onClose, onSaved }: RegisterCobroModalProps) {
+function parseIsoDate(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const d = new Date(trimmed);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
+function toPositiveNumber(raw: string): number | null {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || !(n > 0)) return null;
+  return Math.abs(n);
+}
+
+export function RegisterCobroModal({
+  open,
+  onClose,
+  onSaved,
+  bankAccounts = [],
+}: RegisterCobroModalProps) {
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const [form, setForm] = React.useState<FormState>(defaultState);
   const [error, setError] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
 
   const closeAndReset = React.useCallback(() => {
     setError(null);
@@ -61,25 +82,68 @@ export function RegisterCobroModal({ open, onClose, onSaved }: RegisterCobroModa
     closeAndReset();
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const missing =
-      !form.date.trim() ||
-      !form.amount.trim() ||
-      !form.client.trim() ||
-      !form.invoice.trim() ||
-      !form.destinationAccount.trim() ||
-      !form.description.trim();
-
-    if (missing) {
-      setError("Completá todos los campos.");
+    const collectionDate = parseIsoDate(form.date);
+    if (!collectionDate) {
+      setError("La fecha de cobro es obligatoria.");
       return;
     }
 
-    onSaved?.();
-    closeAndReset();
+    const amount = toPositiveNumber(form.amount);
+    if (amount == null) {
+      setError("El monto debe ser mayor a 0.");
+      return;
+    }
+
+    const bankAccountId = form.destinationAccount.trim();
+    if (!bankAccountId) {
+      setError("Seleccioná una cuenta destino.");
+      return;
+    }
+
+    const description = form.description.trim();
+    if (!description) {
+      setError("La descripción es obligatoria.");
+      return;
+    }
+
+    const customerName = form.client.trim() ? form.client.trim() : undefined;
+    const invoiceNumber = form.invoice.trim() ? form.invoice.trim() : undefined;
+
+    try {
+      setSaving(true);
+      const res = await fetch("/api/receivables/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          collectionDate,
+          amount,
+          customerName,
+          invoiceNumber,
+          bankAccountId,
+          description,
+        }),
+      });
+
+      const body = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || body.ok !== true) {
+        throw new Error(
+          typeof body.error === "string" && body.error.trim()
+            ? body.error
+            : "No se pudo registrar el cobro.",
+        );
+      }
+
+      onSaved?.();
+      closeAndReset();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "No se pudo registrar el cobro.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!open) return null;
@@ -167,15 +231,22 @@ export function RegisterCobroModal({ open, onClose, onSaved }: RegisterCobroModa
               <label className="qp-label" htmlFor="rc-account">
                 Cuenta destino
               </label>
-              <input
+              <select
                 id="rc-account"
-                type="text"
                 className="qp-input"
                 value={form.destinationAccount}
                 onChange={(e) =>
                   setForm((s) => ({ ...s, destinationAccount: e.target.value }))
                 }
-              />
+                disabled={saving}
+              >
+                <option value="">Seleccionar…</option>
+                {bankAccounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2 sm:col-span-2">
@@ -202,8 +273,12 @@ export function RegisterCobroModal({ open, onClose, onSaved }: RegisterCobroModa
             <button type="button" className="qp-btn-secondary h-10 px-4" onClick={closeAndReset}>
               Cancelar
             </button>
-            <button type="submit" className="qp-btn-primary h-10 px-4">
-              Guardar cobro
+            <button
+              type="submit"
+              className="qp-btn-primary h-10 px-4 disabled:pointer-events-none disabled:opacity-60"
+              disabled={saving}
+            >
+              {saving ? "Guardando…" : "Guardar cobro"}
             </button>
           </div>
         </form>

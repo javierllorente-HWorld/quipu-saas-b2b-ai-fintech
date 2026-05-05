@@ -24,6 +24,16 @@ export function UpcomingPaymentsTable({
   const pageIdx = Math.min(page, totalPages - 1);
   const pagedItems = items.slice(pageIdx * PAGE_SIZE, (pageIdx + 1) * PAGE_SIZE);
 
+  const showVendorColumn = React.useMemo(() => {
+    if (items.length === 0) return true;
+    const useful = items.filter((i) => {
+      const v = (i.vendor ?? "").trim();
+      return v.length > 0 && v !== "—";
+    }).length;
+    // Si casi todos vienen sin proveedor, ocultamos la columna.
+    return useful / items.length >= 0.25;
+  }, [items]);
+
   return (
     <div className="qp-card">
       <div className="qp-card-header">
@@ -35,7 +45,9 @@ export function UpcomingPaymentsTable({
             <thead className="text-left text-xs text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="py-3 pr-4 font-medium">Fecha</th>
-                <th className="py-3 pr-4 font-medium">Proveedor</th>
+                {showVendorColumn ? (
+                  <th className="py-3 pr-4 font-medium">Proveedor</th>
+                ) : null}
                 <th className="py-3 pr-4 font-medium">Descripción</th>
                 <th className="py-3 pl-2 text-right font-medium">Importe</th>
               </tr>
@@ -46,9 +58,11 @@ export function UpcomingPaymentsTable({
                   <td className="py-3 pr-4 text-muted-foreground">
                     {formatShortDate(row.date)}
                   </td>
-                  <td className="py-3 pr-4 font-medium text-foreground">
-                    {row.vendor}
-                  </td>
+                  {showVendorColumn ? (
+                    <td className="py-3 pr-4 font-medium text-foreground">
+                      {row.vendor === "—" ? "" : row.vendor}
+                    </td>
+                  ) : null}
                   <td className="py-3 pr-4 text-muted-foreground">
                     {row.description}
                   </td>

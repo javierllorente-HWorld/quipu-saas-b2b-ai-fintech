@@ -6,6 +6,7 @@ export type NuevaTransferenciaModalProps = {
   open: boolean;
   onClose: () => void;
   onSaved?: () => void;
+  bankAccounts?: { id: string; label: string }[];
 };
 
 type FormState = {
@@ -35,14 +36,30 @@ function useOnEscape(active: boolean, onEscape: () => void) {
   }, [active, onEscape]);
 }
 
+function parseIsoDate(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const d = new Date(trimmed);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
+function toPositiveNumber(raw: string): number | null {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || !(n > 0)) return null;
+  return Math.abs(n);
+}
+
 export function NuevaTransferenciaModal({
   open,
   onClose,
   onSaved,
+  bankAccounts = [],
 }: NuevaTransferenciaModalProps) {
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const [form, setForm] = React.useState<FormState>(defaultState);
   const [error, setError] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
 
   const closeAndReset = React.useCallback(() => {
     setError(null);
@@ -63,24 +80,73 @@ export function NuevaTransferenciaModal({
     closeAndReset();
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const missing =
-      !form.date.trim() ||
-      !form.amount.trim() ||
-      !form.sourceAccount.trim() ||
-      !form.destinationAccount.trim() ||
-      !form.description.trim();
-
-    if (missing) {
-      setError("Completá todos los campos.");
+    const transferDate = parseIsoDate(form.date);
+    if (!transferDate) {
+      setError("La fecha es obligatoria.");
       return;
     }
 
-    onSaved?.();
-    closeAndReset();
+    const amount = toPositiveNumber(form.amount);
+    if (amount == null) {
+      setError("El monto debe ser mayor a 0.");
+      return;
+    }
+
+    const fromBankAccountId = form.sourceAccount.trim();
+    const toBankAccountId = form.destinationAccount.trim();
+    if (!fromBankAccountId) {
+      setError("Seleccioná una cuenta origen.");
+      return;
+    }
+    if (!toBankAccountId) {
+      setError("Seleccioná una cuenta destino.");
+      return;
+    }
+    if (fromBankAccountId === toBankAccountId) {
+      setError("La cuenta origen y destino no pueden ser la misma.");
+      return;
+    }
+
+    const description = form.description.trim();
+    if (!description) {
+      setError("La descripción es obligatoria.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const res = await fetch("/api/treasury/transfers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transferDate,
+          amount,
+          fromBankAccountId,
+          toBankAccountId,
+          description,
+        }),
+      });
+
+      const body = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || body.ok !== true) {
+        throw new Error(
+          typeof body.error === "string" && body.error.trim()
+            ? body.error
+            : "No se pudo registrar la transferencia.",
+        );
+      }
+
+      onSaved?.();
+      closeAndReset();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "No se pudo registrar la transferencia.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!open) return null;
@@ -142,28 +208,42 @@ export function NuevaTransferenciaModal({
               <label className="qp-label" htmlFor="nt-source">
                 Cuenta origen
               </label>
-              <input
+              <select
                 id="nt-source"
-                type="text"
                 className="qp-input"
                 value={form.sourceAccount}
                 onChange={(e) => setForm((s) => ({ ...s, sourceAccount: e.target.value }))}
-              />
+                disabled={saving}
+              >
+                <option value="">Seleccionar…</option>
+                {bankAccounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2 sm:col-span-2">
               <label className="qp-label" htmlFor="nt-dest">
                 Cuenta destino
               </label>
-              <input
+              <select
                 id="nt-dest"
-                type="text"
                 className="qp-input"
                 value={form.destinationAccount}
                 onChange={(e) =>
                   setForm((s) => ({ ...s, destinationAccount: e.target.value }))
                 }
-              />
+                disabled={saving}
+              >
+                <option value="">Seleccionar…</option>
+                {bankAccounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2 sm:col-span-2">
@@ -190,8 +270,12 @@ export function NuevaTransferenciaModal({
             <button type="button" className="qp-btn-secondary h-10 px-4" onClick={closeAndReset}>
               Cancelar
             </button>
-            <button type="submit" className="qp-btn-primary h-10 px-4">
-              Guardar transferencia
+            <button
+              type="submit"
+              className="qp-btn-primary h-10 px-4 disabled:pointer-events-none disabled:opacity-60"
+              disabled={saving}
+            >
+              {saving ? "Guardando…" : "Guardar transferencia"}
             </button>
           </div>
         </form>

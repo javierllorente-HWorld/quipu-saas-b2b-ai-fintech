@@ -3,35 +3,16 @@
 import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney, formatShortDate } from "@/components/inicio/format";
-import type { ScheduledTransferRow } from "./mock";
+import type { RecentTransferRow } from "./mock";
 import { PagosCardPagination } from "@/components/pagos/PagosCardPagination";
 
 export type ScheduledTransfersTableProps = {
   title: string;
-  items: ScheduledTransferRow[];
+  items: RecentTransferRow[];
   currency: CurrencyCode;
 };
 
 const PAGE_SIZE = 3;
-
-function StatusPill({ status }: { status: ScheduledTransferRow["status"] }) {
-  const tone =
-    status === "Pendiente"
-      ? "bg-amber-50 text-amber-800 ring-amber-100"
-      : status === "Programada"
-        ? "bg-slate-50 text-slate-700 ring-slate-100"
-        : "bg-rose-50 text-rose-700 ring-rose-100";
-  return (
-    <span
-      className={[
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1",
-        tone,
-      ].join(" ")}
-    >
-      {status}
-    </span>
-  );
-}
 
 export function ScheduledTransfersTable({
   title,
@@ -54,35 +35,28 @@ export function ScheduledTransfersTable({
             <thead className="text-left text-xs text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="py-3 pr-4 font-medium">Fecha</th>
-                <th className="py-3 pr-4 font-medium">Beneficiario</th>
-                <th className="py-3 pr-4 font-medium">Concepto</th>
-                <th className="py-3 pr-4 font-medium">Importe</th>
-                <th className="py-3 pl-2 text-right font-medium">Estado</th>
+                <th className="py-3 pr-4 font-medium">Cuenta</th>
+                <th className="py-3 pr-4 font-medium">Descripción</th>
+                <th className="py-3 pl-2 text-right font-medium">Importe</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {pagedItems.map((row) => {
-                const tone = row.amount < 0 ? "text-rose-700" : "text-emerald-700";
-                return (
-                  <tr key={row.id} className="hover:bg-black/[0.02]">
-                    <td className="py-3 pr-4 text-muted-foreground">
-                      {formatShortDate(row.date)}
-                    </td>
-                    <td className="py-3 pr-4 font-medium text-foreground">
-                      {row.beneficiary}
-                    </td>
-                    <td className="py-3 pr-4 text-muted-foreground">
-                      {row.concept}
-                    </td>
-                    <td className={`py-3 pr-4 font-semibold ${tone}`}>
-                      {row.amount < 0 ? "-" : "+"} {formatMoney(Math.abs(row.amount), currency)}
-                    </td>
-                    <td className="py-3 pl-2 text-right">
-                      <StatusPill status={row.status} />
-                    </td>
-                  </tr>
-                );
-              })}
+              {pagedItems.map((row) => (
+                <tr key={row.id} className="hover:bg-black/[0.02]">
+                  <td className="py-3 pr-4 text-muted-foreground">
+                    {formatShortDate(row.date)}
+                  </td>
+                  <td className="py-3 pr-4 font-medium text-foreground">
+                    {row.account}
+                  </td>
+                  <td className="py-3 pr-4 text-muted-foreground">
+                    {row.description}
+                  </td>
+                  <td className="py-3 pl-2 text-right font-semibold text-foreground">
+                    {formatMoney(row.amount, currency)}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

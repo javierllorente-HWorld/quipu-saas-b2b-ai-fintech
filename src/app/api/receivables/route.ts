@@ -15,6 +15,13 @@ function toInt(value: unknown): number {
   return Number.isFinite(n) ? Math.trunc(n) : 0;
 }
 
+function toIsoDate(value: unknown): string | null {
+  if (value == null) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === "string") return value.slice(0, 10);
+  return null;
+}
+
 function pctOf(part: number, total: number): number {
   if (total <= 0) return 0;
   return (part / total) * 100;
@@ -22,7 +29,8 @@ function pctOf(part: number, total: number): number {
 
 export async function GET() {
   try {
-    const [orgRes, kpiRes, agingRes, customersRes, invoicesRes] = await Promise.all([
+    const [orgRes, kpiRes, agingRes, customersRes, invoicesRes, recentCollectionsRes] =
+      await Promise.all([
       query(
         `SELECT id, name, default_currency
          FROM organizations
@@ -95,6 +103,26 @@ export async function GET() {
          WHERE i.organization_id = $1::uuid AND i.status = 'pending'
          ORDER BY i.due_date ASC NULLS LAST, i.id ASC
          LIMIT 10`,
+        [ORGANIZATION_ID]
+      ),
+      query(
+        `SELECT
+           cm.id,
+           cm.movement_date,
+           cm.description,
+           cm.amount,
+           COALESCE(NULLIF(TRIM(ba.bank_name), ''), NULLIF(TRIM(ba.name), ''), NULL) AS bank_account_name,
+           cm.source
+         FROM cash_movements cm
+         LEFT JOIN bank_accounts ba
+           ON ba.id = cm.bank_account_id
+          AND ba.organization_id = cm.organization_id
+         WHERE cm.organization_id = $1::uuid
+           AND cm.direction = 'in'
+           AND cm.category = 'collections'
+           AND cm.status = 'confirmed'
+         ORDER BY cm.movement_date DESC NULLS LAST, cm.created_at DESC NULLS LAST
+         LIMIT 8`,
         [ORGANIZATION_ID]
       ),
     ]);
@@ -210,6 +238,22 @@ export async function GET() {
       };
     });
 
+    const recentCollections = (recentCollectionsRes.rows as {
+      id: string;
+      movement_date: Date | string | null;
+      description: string | null;
+      amount: unknown;
+      bank_account_name: string | null;
+      source: string | null;
+    }[]).map((row) => ({
+      id: row.id,
+      date: toIsoDate(row.movement_date),
+      description: row.description ?? "",
+      amount: toNumber(row.amount),
+      bankAccountName: row.bank_account_name ?? undefined,
+      source: row.source ?? undefined,
+    }));
+
     return NextResponse.json({
       ok: true,
       organization,
@@ -221,6 +265,7 @@ export async function GET() {
       aging,
       customers,
       invoices,
+      recentCollections,
     });
   } catch (error) {
     console.error("Error fetching receivables:", error);

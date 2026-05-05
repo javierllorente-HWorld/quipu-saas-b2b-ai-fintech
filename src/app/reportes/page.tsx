@@ -44,7 +44,7 @@ export default function ReportesPage() {
     return () => window.clearTimeout(t);
   }, [savedToast]);
 
-  React.useEffect(() => {
+  const loadReports = React.useCallback(() => {
     let cancelled = false;
     setReportsLoading(true);
     setReportsError(null);
@@ -79,6 +79,10 @@ export default function ReportesPage() {
       cancelled = true;
     };
   }, []);
+
+  React.useEffect(() => {
+    return loadReports();
+  }, [loadReports]);
 
   const topbarCompanies = React.useMemo(() => {
     if (reportsView?.organization) {
@@ -228,7 +232,11 @@ export default function ReportesPage() {
       <GenerateReportModal
         open={generateReportOpen}
         onClose={() => setGenerateReportOpen(false)}
-        onGenerated={() => setSavedToast(true)}
+        onGenerated={() => {
+          setSavedToast(true);
+          setGenerateReportOpen(false);
+          loadReports();
+        }}
       />
     </div>
   );

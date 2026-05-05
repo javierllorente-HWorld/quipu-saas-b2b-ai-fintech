@@ -1,8 +1,8 @@
 import type { CurrencyCode } from "@/components/inicio/mock";
 import type {
   BankBalanceRow,
-  ScheduledTransferRow,
   TesoreriaKpi,
+  RecentTransferRow,
 } from "./mock";
 
 export type TreasuryApiSuccessPayload = {
@@ -26,14 +26,13 @@ export type TreasuryApiSuccessPayload = {
     currency: string;
     status: string;
   }>;
-  scheduledTransfers: Array<{
+  recentTransfers: Array<{
     id: string;
-    executionDate: string | null;
-    beneficiaryName: string;
-    concept: string;
+    date: string | null;
+    description: string;
     amount: number;
-    currency: string;
-    status: string;
+    bankAccountName?: string;
+    direction: string;
   }>;
 };
 
@@ -84,14 +83,6 @@ function formatAccountCell(accountName: string, accountType: string): string {
   return "—";
 }
 
-function mapTransferUiStatus(apiStatus: string): ScheduledTransferRow["status"] {
-  const u = (apiStatus ?? "").toLowerCase();
-  if (u === "rejected" || u === "rechazada" || u === "failed") return "Rechazada";
-  if (u === "pending" || u === "pendiente") return "Pendiente";
-  if (u === "scheduled" || u === "programada") return "Programada";
-  return "Programada";
-}
-
 export function mapTreasuryApiPayload(payload: TreasuryApiSuccessPayload) {
   const currency = mapDefaultCurrency(payload.organization?.default_currency);
 
@@ -126,13 +117,12 @@ export function mapTreasuryApiPayload(payload: TreasuryApiSuccessPayload) {
     status: mapBankStatus(b.status),
   }));
 
-  const scheduledTransfers: ScheduledTransferRow[] = payload.scheduledTransfers.map((t) => ({
+  const recentTransfers: RecentTransferRow[] = payload.recentTransfers.map((t) => ({
     id: t.id,
-    date: safeIsoDate(t.executionDate),
-    beneficiary: t.beneficiaryName?.trim() || "—",
-    concept: t.concept?.trim() || "—",
-    amount: -Math.abs(Number(t.amount) || 0),
-    status: mapTransferUiStatus(t.status),
+    date: safeIsoDate(t.date),
+    account: (t.bankAccountName ?? "").trim() || "—",
+    description: t.description?.trim() || "—",
+    amount: Math.abs(Number(t.amount) || 0),
   }));
 
   return {
@@ -140,6 +130,6 @@ export function mapTreasuryApiPayload(payload: TreasuryApiSuccessPayload) {
     organization: payload.organization,
     kpis,
     bankBalances,
-    scheduledTransfers,
+    recentTransfers,
   };
 }

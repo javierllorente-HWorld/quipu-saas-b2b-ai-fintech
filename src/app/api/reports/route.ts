@@ -26,8 +26,84 @@ function computeMonthlyVariationPct(
   return ((netCur - netPrev) / Math.abs(netPrev)) * 100;
 }
 
+type ArtifactsCols = {
+  hasTitle: boolean;
+  hasName: boolean;
+  hasPeriod: boolean;
+  hasPeriodLabel: boolean;
+  hasGeneratedAt: boolean;
+  hasCreatedAt: boolean;
+  hasFormat: boolean;
+  hasStorageUrl: boolean;
+  hasFileUrl: boolean;
+};
+
+async function detectReportArtifactsColumns(): Promise<ArtifactsCols> {
+  const res = await query(
+    `SELECT column_name
+     FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'report_artifacts'`,
+  );
+  const names = new Set(
+    (res.rows as { column_name?: unknown }[])
+      .map((r) => (typeof r.column_name === "string" ? r.column_name : ""))
+      .filter(Boolean),
+  );
+  return {
+    hasTitle: names.has("title"),
+    hasName: names.has("name"),
+    hasPeriod: names.has("period"),
+    hasPeriodLabel: names.has("period_label"),
+    hasGeneratedAt: names.has("generated_at"),
+    hasCreatedAt: names.has("created_at"),
+    hasFormat: names.has("format"),
+    hasStorageUrl: names.has("storage_url"),
+    hasFileUrl: names.has("file_url"),
+  };
+}
+
 export async function GET() {
   try {
+    const raCols = await detectReportArtifactsColumns();
+    const nameExpr = raCols.hasTitle && raCols.hasName
+      ? "COALESCE(NULLIF(TRIM(ra.title), ''), NULLIF(TRIM(ra.name), ''), 'Sin nombre') AS name"
+      : raCols.hasTitle
+        ? "COALESCE(NULLIF(TRIM(ra.title), ''), 'Sin nombre') AS name"
+        : raCols.hasName
+          ? "COALESCE(NULLIF(TRIM(ra.name), ''), 'Sin nombre') AS name"
+          : "'Sin nombre'::text AS name";
+
+    const periodExpr = raCols.hasPeriod && raCols.hasPeriodLabel
+      ? "COALESCE(NULLIF(TRIM(ra.period::text), ''), NULLIF(TRIM(ra.period_label), ''), '—') AS period_label"
+      : raCols.hasPeriod
+        ? "COALESCE(NULLIF(TRIM(ra.period::text), ''), '—') AS period_label"
+        : raCols.hasPeriodLabel
+          ? "COALESCE(NULLIF(TRIM(ra.period_label), ''), '—') AS period_label"
+          : "'—'::text AS period_label";
+
+    const generatedExpr = raCols.hasGeneratedAt && raCols.hasCreatedAt
+      ? "COALESCE(ra.generated_at, ra.created_at) AS generated_at"
+      : raCols.hasGeneratedAt
+        ? "ra.generated_at AS generated_at"
+        : raCols.hasCreatedAt
+          ? "ra.created_at AS generated_at"
+          : "NULL::timestamp AS generated_at";
+
+    const formatExpr = raCols.hasFormat ? `ra."format" AS report_format` : "NULL::text AS report_format";
+
+    const storageExpr = raCols.hasStorageUrl
+      ? "COALESCE(ra.storage_url, '') AS storage_url"
+      : raCols.hasFileUrl
+        ? "COALESCE(ra.file_url, '') AS storage_url"
+        : "''::text AS storage_url";
+
+    const orderExpr = raCols.hasGeneratedAt
+      ? "ra.generated_at DESC NULLS LAST, ra.id DESC"
+      : raCols.hasCreatedAt
+        ? "ra.created_at DESC NULLS LAST, ra.id DESC"
+        : "ra.id DESC";
+
     const [orgRes, ytdRes, monthlyRes, indicatorsRes, artifactsRes] = await Promise.all([
       query(
         `SELECT id, name, default_currency
@@ -94,14 +170,14 @@ export async function GET() {
       query(
         `SELECT
            ra.id,
-           ra.name,
-           ra.period_label,
-           ra.generated_at,
-           ra."format" AS report_format,
-           ra.storage_url
+           ${nameExpr},
+           ${periodExpr},
+           ${generatedExpr},
+           ${formatExpr},
+           ${storageExpr}
          FROM report_artifacts ra
          WHERE ra.organization_id = $1::uuid
-         ORDER BY ra.generated_at DESC NULLS LAST, ra.id DESC
+         ORDER BY ${orderExpr}
          LIMIT 10`,
         [ORGANIZATION_ID]
       ),

@@ -34,6 +34,16 @@ export type PayablesApiSuccessPayload = {
     amount: number;
     status: string;
   }>;
+  scheduledPayments?: Array<{
+    id: string;
+    paymentDate: string | null;
+    vendorName?: string;
+    description: string;
+    amount: number;
+    category?: string;
+    bankAccountName?: string;
+    status: string;
+  }>;
   vendors: Array<{
     vendorId: string | null;
     vendorName: string;
@@ -123,13 +133,23 @@ export function mapPayablesApiPayload(payload: PayablesApiSuccessPayload) {
     };
   });
 
-  const upcoming: UpcomingPayment[] = payload.upcomingPayments.map((u) => ({
+  const scheduled = (payload.scheduledPayments ?? []).map((p) => ({
+    id: p.id,
+    date: safeIsoDate(p.paymentDate),
+    vendor: p.vendorName?.trim() ? p.vendorName : "—",
+    description: p.description || "—",
+    amount: p.amount,
+  }));
+
+  const upcomingFallback: UpcomingPayment[] = payload.upcomingPayments.map((u) => ({
     id: u.id,
     date: safeIsoDate(u.date),
     vendor: u.vendorName || "—",
     description: u.description || "—",
     amount: u.amount,
   }));
+
+  const upcoming: UpcomingPayment[] = scheduled.length > 0 ? scheduled : upcomingFallback;
 
   const vendors: VendorRow[] = payload.vendors.map((v, idx) => ({
     id: v.vendorId ?? `sin-proveedor-${idx}`,

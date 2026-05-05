@@ -6,6 +6,7 @@ import type {
   DebtAgingItem,
   InvoiceStatus,
   PendingInvoice,
+  RecentCollection,
 } from "./mock";
 
 export type ReceivablesApiSuccessPayload = {
@@ -40,6 +41,14 @@ export type ReceivablesApiSuccessPayload = {
     amount: number;
     status: string;
     computedStatus: string;
+  }>;
+  recentCollections?: Array<{
+    id: string;
+    date: string | null;
+    description: string;
+    amount: number;
+    bankAccountName?: string;
+    source?: string;
   }>;
 };
 
@@ -129,6 +138,20 @@ export function mapReceivablesApiPayload(payload: ReceivablesApiSuccessPayload) 
     };
   });
 
+  const recentCollections: RecentCollection[] = (payload.recentCollections ?? [])
+    .map((c) => {
+      const date = safeDueDate(c.date ?? undefined);
+      return {
+        id: c.id,
+        date,
+        description: c.description || "—",
+        amount: c.amount,
+        bankAccountName: c.bankAccountName,
+        source: c.source,
+      };
+    })
+    .slice(0, 8);
+
   return {
     currency,
     organization: payload.organization,
@@ -139,5 +162,6 @@ export function mapReceivablesApiPayload(payload: ReceivablesApiSuccessPayload) 
     },
     customers,
     invoices,
+    recentCollections,
   };
 }

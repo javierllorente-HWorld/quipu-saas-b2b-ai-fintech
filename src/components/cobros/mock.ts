@@ -37,6 +37,15 @@ export type PendingInvoice = {
   status: InvoiceStatus;
 };
 
+export type RecentCollection = {
+  id: string;
+  date: string; // ISO yyyy-mm-dd
+  description: string;
+  amount: number;
+  bankAccountName?: string;
+  source?: string;
+};
+
 export type CobrosDashboardData = {
   kpis: CobrosKpi[];
   aging: {
@@ -45,6 +54,7 @@ export type CobrosDashboardData = {
   };
   customers: CustomerReceivable[];
   invoices: PendingInvoice[];
+  recentCollections?: RecentCollection[];
   currency: CurrencyCode;
 };
 

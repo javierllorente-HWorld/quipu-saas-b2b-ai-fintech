@@ -22,6 +22,25 @@ function toIsoDate(value: unknown): string | null {
   return null;
 }
 
+type CashMovementsCols = {
+  hasCreatedAt: boolean;
+};
+
+async function detectCashMovementsColumns(): Promise<CashMovementsCols> {
+  const res = await query(
+    `SELECT column_name
+     FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'cash_movements'`,
+  );
+  const names = new Set(
+    (res.rows as { column_name?: unknown }[])
+      .map((r) => (typeof r.column_name === "string" ? r.column_name : ""))
+      .filter(Boolean),
+  );
+  return { hasCreatedAt: names.has("created_at") };
+}
+
 function buildTopBankExposureLabel(
   topLabel: string | null | undefined,
   topBalance: number,
@@ -38,12 +57,17 @@ function buildTopBankExposureLabel(
 
 export async function GET() {
   try {
+    const cmCols = await detectCashMovementsColumns();
+    const transfersOrder = cmCols.hasCreatedAt
+      ? "cm.movement_date DESC NULLS LAST, cm.created_at DESC NULLS LAST"
+      : "cm.movement_date DESC NULLS LAST, cm.id DESC";
+
     const [
       orgRes,
       kpiRes,
       topExposureRes,
       banksRes,
-      transfersRes,
+      recentTransfersRes,
     ] = await Promise.all([
       query(
         `SELECT id, name, default_currency
@@ -92,22 +116,23 @@ export async function GET() {
       ),
       query(
         `SELECT
-           p.id,
-           p.payment_date AS execution_date,
-           COALESCE(NULLIF(TRIM(v.name), ''), 'Proveedor sin nombre') AS beneficiary_name,
-           COALESCE(NULLIF(TRIM(p.notes), ''), 'Pago programado') AS concept,
-           p.amount,
-           COALESCE(
-             NULLIF(TRIM(p.currency), ''),
-             (SELECT default_currency FROM organizations WHERE id = $1::uuid LIMIT 1)
-           ) AS currency,
-           p.status
-         FROM payments p
-         LEFT JOIN vendors v ON v.id = p.vendor_id AND v.organization_id = p.organization_id
-         WHERE p.organization_id = $1::uuid AND p.status = 'scheduled'
-         ORDER BY p.payment_date ASC NULLS LAST, p.id ASC
+           cm.id,
+           cm.movement_date,
+           cm.description,
+           cm.amount,
+           cm.direction,
+           COALESCE(NULLIF(TRIM(ba.bank_name), ''), NULLIF(TRIM(ba.name), ''), NULL) AS bank_account_name
+         FROM cash_movements cm
+         LEFT JOIN bank_accounts ba
+           ON ba.id = cm.bank_account_id
+          AND ba.organization_id = cm.organization_id
+         WHERE cm.organization_id = $1::uuid
+           AND cm.category = 'transfers'
+           AND cm.status = 'confirmed'
+           AND cm.direction = 'out'
+         ORDER BY ${transfersOrder}
          LIMIT 10`,
-        [ORGANIZATION_ID]
+        [ORGANIZATION_ID],
       ),
     ]);
 
@@ -163,22 +188,20 @@ export async function GET() {
       status: row.status,
     }));
 
-    const scheduledTransfers = (transfersRes.rows as {
+    const recentTransfers = (recentTransfersRes.rows as {
       id: string;
-      execution_date: Date | string | null;
-      beneficiary_name: string;
-      concept: string;
+      movement_date: Date | string | null;
+      description: string | null;
       amount: unknown;
-      currency: string | null;
-      status: string;
+      direction: string | null;
+      bank_account_name: string | null;
     }[]).map((row) => ({
       id: row.id,
-      executionDate: toIsoDate(row.execution_date),
-      beneficiaryName: row.beneficiary_name,
-      concept: row.concept,
+      date: toIsoDate(row.movement_date),
+      description: row.description ?? "",
       amount: toNumber(row.amount),
-      currency: row.currency ?? "",
-      status: row.status,
+      direction: row.direction ?? "",
+      bankAccountName: row.bank_account_name ?? undefined,
     }));
 
     return NextResponse.json({
@@ -190,7 +213,7 @@ export async function GET() {
         topBankExposureLabel,
       },
       bankBalances,
-      scheduledTransfers,
+      recentTransfers,
     });
   } catch (error) {
     console.error("Error fetching treasury:", error);
