@@ -5,17 +5,20 @@ import { useRouter } from "next/navigation";
  import type { ActivityItem, CurrencyCode } from "./mock";
  import { RecentActivityList } from "./RecentActivityList";
  
- export type RecentActivityDropdownProps = {
-   items: ActivityItem[];
-   currency: CurrencyCode;
+export type RecentActivityDropdownProps = {
+  items: ActivityItem[];
+  currency: CurrencyCode;
   loading?: boolean;
- };
- 
- export function RecentActivityDropdown({
-   items,
-   currency,
+  /** Si true, mensaje neutro (no confundir con lista vacía). */
+  loadError?: boolean;
+};
+
+export function RecentActivityDropdown({
+  items,
+  currency,
   loading,
- }: RecentActivityDropdownProps) {
+  loadError,
+}: RecentActivityDropdownProps) {
   const router = useRouter();
    return (
     <div className="p-4">
@@ -26,8 +29,14 @@ import { useRouter } from "next/navigation";
       </div>
  
       <div className="mt-3 max-h-[292px] overflow-auto pr-1">
-        {loading ? (
-          <div className="space-y-3" aria-label="Cargando movimientos">
+        {loadError ? (
+          <div className="rounded-2xl border border-border bg-white/60 px-3 py-6 text-center text-xs text-muted-foreground">
+            No se pudieron cargar los movimientos.
+          </div>
+        ) : loading ? (
+          <div>
+            <p className="mb-3 text-xs text-muted-foreground">Cargando movimientos...</p>
+            <div className="space-y-3" aria-label="Cargando movimientos">
             {Array.from({ length: 4 }).map((_, idx) => (
               <div key={idx} className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
@@ -43,6 +52,7 @@ import { useRouter } from "next/navigation";
                 </div>
               </div>
             ))}
+            </div>
           </div>
         ) : items.length ? (
           <RecentActivityList items={items} currency={currency} limit={4} compact />

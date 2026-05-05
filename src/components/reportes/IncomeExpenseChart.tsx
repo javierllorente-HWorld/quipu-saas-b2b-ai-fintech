@@ -82,7 +82,7 @@ export function IncomeExpenseChart({ title, datasets, currency }: IncomeExpenseC
   const padX = 34;
   const padY = 16;
   const chartH = 200;
-  const labelY = chartH + 16;
+  const labelY = chartH + 20;
 
   const values = points.flatMap((p) => [p.ingresos, p.egresos]);
   const { min, max } = extent(values.length ? values : [0, 1]);
@@ -167,8 +167,8 @@ export function IncomeExpenseChart({ title, datasets, currency }: IncomeExpenseC
                       textAnchor="middle"
                       style={{
                         fill: "var(--muted-foreground)",
-                        fontSize: 11,
-                        fontWeight: 500,
+                        fontSize: 13,
+                        fontWeight: 600,
                       }}
                     >
                       {p.label}

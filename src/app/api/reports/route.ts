@@ -14,9 +14,21 @@ function operatingMarginPct(incomeYtd: number, expensesYtd: number): number {
   return ((incomeYtd - expensesYtd) / incomeYtd) * 100;
 }
 
+function computeMonthlyVariationPct(
+  rows: Array<{ income: number; expenses: number }>,
+): number | null {
+  if (rows.length < 2) return null;
+  const cur = rows[rows.length - 1]!;
+  const prev = rows[rows.length - 2]!;
+  const netCur = cur.income - cur.expenses;
+  const netPrev = prev.income - prev.expenses;
+  if (netPrev === 0) return null;
+  return ((netCur - netPrev) / Math.abs(netPrev)) * 100;
+}
+
 export async function GET() {
   try {
-    const [orgRes, ytdRes, monthlyRes, indicatorsRes] = await Promise.all([
+    const [orgRes, ytdRes, monthlyRes, indicatorsRes, artifactsRes] = await Promise.all([
       query(
         `SELECT id, name, default_currency
          FROM organizations
@@ -79,6 +91,20 @@ export async function GET() {
             WHERE organization_id = $1::uuid AND status = 'pending') AS payables`,
         [ORGANIZATION_ID]
       ),
+      query(
+        `SELECT
+           ra.id,
+           ra.name,
+           ra.period_label,
+           ra.generated_at,
+           ra."format" AS report_format,
+           ra.storage_url
+         FROM report_artifacts ra
+         WHERE ra.organization_id = $1::uuid
+         ORDER BY ra.generated_at DESC NULLS LAST, ra.id DESC
+         LIMIT 10`,
+        [ORGANIZATION_ID]
+      ),
     ]);
 
     const orgRow = orgRes.rows[0] as
@@ -101,13 +127,6 @@ export async function GET() {
     const expensesYtd = toNumber(ytdRow?.expenses_ytd);
     const marginPct = operatingMarginPct(incomeYtd, expensesYtd);
 
-    const kpis = {
-      incomeYtd,
-      expensesYtd,
-      operatingMarginPct: marginPct,
-      monthlyVariationPct: 0,
-    };
-
     const incomeExpense = (monthlyRes.rows as {
       month: string;
       income: unknown;
@@ -117,6 +136,13 @@ export async function GET() {
       income: toNumber(row.income),
       expenses: toNumber(row.expenses),
     }));
+
+    const kpis = {
+      incomeYtd,
+      expensesYtd,
+      operatingMarginPct: marginPct,
+      monthlyVariationPct: computeMonthlyVariationPct(incomeExpense),
+    };
 
     const indRow = indicatorsRes.rows[0] as
       | { liquidity?: unknown; receivables?: unknown; payables?: unknown }
@@ -153,13 +179,41 @@ export async function GET() {
       },
     ];
 
+    const recentReports = (
+      artifactsRes.rows as {
+        id: string;
+        name: string | null;
+        period_label: string | null;
+        generated_at: Date | string | null;
+        report_format: string | null;
+        storage_url: string | null;
+      }[]
+    ).map((row) => {
+      let generatedAt: string | null = null;
+      const g = row.generated_at;
+      if (g instanceof Date) {
+        generatedAt = g.toISOString();
+      } else if (typeof g === "string" && g.length > 0) {
+        generatedAt = g.includes("T") ? g : `${g.slice(0, 10)}T12:00:00.000Z`;
+      }
+
+      return {
+        id: row.id,
+        name: (row.name ?? "").trim() || "Sin nombre",
+        periodLabel: (row.period_label ?? "").trim() || "—",
+        generatedAt,
+        format: (row.report_format ?? "PDF").trim() || "PDF",
+        storageUrl: (row.storage_url ?? "").trim(),
+      };
+    });
+
     return NextResponse.json({
       ok: true,
       organization,
       kpis,
       incomeExpense,
       keyIndicators,
-      recentReports: [],
+      recentReports,
     });
   } catch (error) {
     console.error("Error fetching reports:", error);
