@@ -49,7 +49,7 @@ function buildTopBankExposureLabel(
 ): string {
   if (bankCount <= 0) return "Sin cuentas activas";
   if (total <= 0) return "Saldo consolidado en cero";
-  if (topBalance <= 0) return "Sin exposición principal";
+  if (topBalance <= 0) return "Sin cuenta principal";
   const pct = (topBalance / total) * 100;
   const label = (topLabel ?? "").trim() || "Cuenta";
   return `${label} — ${pct.toFixed(1)}% del total`;

@@ -65,18 +65,18 @@ function mapDefaultCurrency(value: string | null | undefined): CurrencyCode {
   return "ARS";
 }
 
-function safeDueDate(value: string | null | undefined): string {
+function parseIsoDateOrNull(value: string | null | undefined): string | null {
   if (value && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
-  const t = new Date();
-  t.setHours(12, 0, 0, 0);
-  return t.toISOString().slice(0, 10);
+  return null;
 }
 
-function invoiceUiStatus(computedStatus: string, dueDateIso: string): InvoiceStatus {
+function invoiceUiStatus(computedStatus: string, dueDateIso: string | null): InvoiceStatus {
   const norm = (computedStatus ?? "").trim().toLowerCase();
   if (norm === "vencida") return "Vencida";
   if (norm === "por vencer" || norm === "por_vencer") return "Por_vencer";
   if (norm === "pendiente") return "Pendiente";
+
+  if (dueDateIso == null) return "Pendiente";
 
   const today = new Date().toISOString().slice(0, 10);
   if (dueDateIso < today) return "Vencida";
@@ -127,7 +127,7 @@ export function mapReceivablesApiPayload(payload: ReceivablesApiSuccessPayload) 
   }));
 
   const invoices: PendingInvoice[] = payload.invoices.map((inv) => {
-    const dueDate = safeDueDate(inv.dueDate);
+    const dueDate = parseIsoDateOrNull(inv.dueDate);
     return {
       id: inv.id,
       invoice: inv.invoiceNumber || "—",
@@ -140,7 +140,7 @@ export function mapReceivablesApiPayload(payload: ReceivablesApiSuccessPayload) 
 
   const recentCollections: RecentCollection[] = (payload.recentCollections ?? [])
     .map((c) => {
-      const date = safeDueDate(c.date ?? undefined);
+      const date = parseIsoDateOrNull(c.date ?? undefined);
       return {
         id: c.id,
         date,

@@ -66,7 +66,7 @@ export function InvoicesPendingTable({ title, items, currency }: InvoicesPending
                   </td>
                   <td className="py-3 pr-4 text-muted-foreground">{row.customer}</td>
                   <td className="py-3 pr-4 text-muted-foreground">
-                    {formatShortDate(row.dueDate)}
+                    {row.dueDate ? formatShortDate(row.dueDate) : "Sin fecha"}
                   </td>
                   <td className="py-3 pr-4 font-semibold text-foreground">
                     {formatMoney(row.amount, currency)}

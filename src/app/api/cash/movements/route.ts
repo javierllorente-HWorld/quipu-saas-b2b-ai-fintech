@@ -31,6 +31,13 @@ function parseMovementDate(raw: unknown): string | null {
   return d.toISOString().slice(0, 10);
 }
 
+function orgCurrencyFromRow(row: { default_currency?: unknown } | undefined): string {
+  const raw = row?.default_currency;
+  if (typeof raw !== "string") return "ARS";
+  const c = raw.trim().toUpperCase();
+  return c.length > 0 ? c : "ARS";
+}
+
 function buildFinalDescription(
   type: "Cobro" | "Pago",
   description: string,
@@ -115,6 +122,15 @@ export async function POST(request: Request) {
     const balanceDelta = movementType === "Cobro" ? amount : -amount;
 
     const movement = await withTransaction(async (client) => {
+      const orgRes = await client.query(
+        `SELECT default_currency
+         FROM organizations
+         WHERE id = $1::uuid`,
+        [ORGANIZATION_ID],
+      );
+      const orgRow = orgRes.rows[0] as { default_currency?: unknown } | undefined;
+      const movementCurrency = orgCurrencyFromRow(orgRow);
+
       const lockRes = await client.query(
         `SELECT id,
                 COALESCE(NULLIF(TRIM(bank_name), ''), NULLIF(TRIM(name), ''), 'Cuenta') AS bank_label,
@@ -164,7 +180,7 @@ export async function POST(request: Request) {
           movementDate,
           finalDescription,
           amount,
-          "ARS",
+          movementCurrency,
           direction,
           category,
           "confirmed",

@@ -42,11 +42,9 @@ function mapDefaultCurrency(value: string | null | undefined): CurrencyCode {
   return "ARS";
 }
 
-function safeIsoDate(value: string | null | undefined): string {
+function parseIsoDateOrNull(value: string | null | undefined): string | null {
   if (value && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
-  const t = new Date();
-  t.setHours(12, 0, 0, 0);
-  return t.toISOString().slice(0, 10);
+  return null;
 }
 
 function mapBankStatus(apiStatus: string): BankBalanceRow["status"] {
@@ -66,10 +64,13 @@ function accountTypeLabel(accountType: string | null | undefined): string {
     case "investment":
     case "investments":
       return "Inversión";
+    case "credit":
+    case "credit_card":
+      return "Crédito";
     case "in_transit":
       return "En tránsito";
     default:
-      return key.length > 0 ? "Otro" : "";
+      return "Otra cuenta";
   }
 }
 
@@ -119,7 +120,7 @@ export function mapTreasuryApiPayload(payload: TreasuryApiSuccessPayload) {
 
   const recentTransfers: RecentTransferRow[] = payload.recentTransfers.map((t) => ({
     id: t.id,
-    date: safeIsoDate(t.date),
+    date: parseIsoDateOrNull(t.date),
     account: (t.bankAccountName ?? "").trim() || "—",
     description: t.description?.trim() || "—",
     amount: Math.abs(Number(t.amount) || 0),
