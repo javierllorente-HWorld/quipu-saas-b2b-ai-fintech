@@ -19,22 +19,19 @@ export type BankBalanceRow = {
   status: "Activa" | "Inactiva";
 };
 
-export type ScheduledTransferStatus = "Pendiente" | "Programada" | "Rechazada";
-
-export type ScheduledTransferRow = {
+export type RecentTransferRow = {
   id: string;
   date: string; // ISO yyyy-mm-dd
-  beneficiary: string;
-  concept: string;
+  account: string;
+  description: string;
   amount: number;
-  status: ScheduledTransferStatus;
 };
 
 export type TesoreriaDashboardData = {
   currency: CurrencyCode;
   kpis: TesoreriaKpi[];
   bankBalances: BankBalanceRow[];
-  scheduledTransfers: ScheduledTransferRow[];
+  recentTransfers: RecentTransferRow[];
 };
 
 const acme: TesoreriaDashboardData = {
@@ -98,46 +95,41 @@ const acme: TesoreriaDashboardData = {
       status: "Activa",
     },
   ],
-  scheduledTransfers: [
+  recentTransfers: [
     {
       id: "t1",
       date: "2026-05-22",
-      beneficiary: "Proveedores del Sur S.A.",
-      concept: "Pago a proveedores",
-      amount: -2540000,
-      status: "Pendiente",
+      account: "BBVA Argentina · Banco",
+      description: "Transferencia enviada — Rebalanceo",
+      amount: 2540000,
     },
     {
       id: "t2",
       date: "2026-05-23",
-      beneficiary: "Distribuidora del Norte",
-      concept: "Pago a proveedores",
-      amount: -1860000,
-      status: "Pendiente",
+      account: "Banco Galicia · Banco",
+      description: "Transferencia enviada — Traspaso fondos",
+      amount: 1860000,
     },
     {
       id: "t3",
       date: "2026-05-24",
-      beneficiary: "Servicios Cloud S.R.L.",
-      concept: "Servicios IT",
-      amount: -680000,
-      status: "Programada",
+      account: "Mercado Pago · Billetera",
+      description: "Transferencia enviada — Operación",
+      amount: 680000,
     },
     {
       id: "t4",
       date: "2026-05-26",
-      beneficiary: "Aseguradora SegurAr",
-      concept: "Póliza mensual",
-      amount: -320000,
-      status: "Programada",
+      account: "Banco Santander · Banco",
+      description: "Transferencia enviada — Operación",
+      amount: 320000,
     },
     {
       id: "t5",
       date: "2026-05-27",
-      beneficiary: "AFIP - IVA",
-      concept: "Impuestos",
-      amount: -1120000,
-      status: "Programada",
+      account: "Banco Macro · Banco",
+      description: "Transferencia enviada — Operación",
+      amount: 1120000,
     },
   ],
 };
@@ -172,9 +164,9 @@ const northwind: TesoreriaDashboardData = {
     { id: "cwf", bank: "Wells Fargo", account: "Payroll", available: 16682, status: "Activa" },
     { id: "cst", bank: "Stripe", account: "Payouts", available: 10279, status: "Activa" },
   ],
-  scheduledTransfers: [
-    { id: "nt1", date: "2026-05-22", beneficiary: "Payroll Co.", concept: "Payroll batch", amount: -1200, status: "Pendiente" },
-    { id: "nt2", date: "2026-05-24", beneficiary: "NimbusCloud", concept: "Cloud services", amount: -680, status: "Programada" },
+  recentTransfers: [
+    { id: "nt1", date: "2026-05-22", account: "Chase · Banco", description: "Transferencia enviada — Payroll batch", amount: 1200 },
+    { id: "nt2", date: "2026-05-24", account: "Bank of America · Banco", description: "Transferencia enviada — Cloud services", amount: 680 },
   ],
 };
 

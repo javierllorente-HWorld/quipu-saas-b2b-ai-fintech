@@ -35,7 +35,7 @@ export default function TesoreriaPage() {
     onAfterNavigate: () => setSidebarOpen(false),
   });
 
-  React.useEffect(() => {
+  const loadTreasury = React.useCallback(() => {
     let cancelled = false;
     setTreasuryLoading(true);
     setTreasuryError(null);
@@ -70,6 +70,10 @@ export default function TesoreriaPage() {
       cancelled = true;
     };
   }, []);
+
+  React.useEffect(() => {
+    return loadTreasury();
+  }, [loadTreasury]);
 
   const topbarCompanies = React.useMemo(() => {
     if (treasuryView?.organization) {
@@ -188,11 +192,26 @@ export default function TesoreriaPage() {
                       items={treasuryView.bankBalances}
                       currency={displayCurrency}
                     />
-                    <ScheduledTransfersTable
-                      title="Transferencias programadas"
-                      items={treasuryView.scheduledTransfers}
-                      currency={displayCurrency}
-                    />
+                    {treasuryView.recentTransfers.length > 0 ? (
+                      <ScheduledTransfersTable
+                        title="Transferencias recientes"
+                        items={treasuryView.recentTransfers}
+                        currency={displayCurrency}
+                      />
+                    ) : (
+                      <div className="qp-card">
+                        <div className="qp-card-header">
+                          <div className="text-base font-semibold tracking-tight">
+                            Transferencias recientes
+                          </div>
+                        </div>
+                        <div className="qp-card-content">
+                          <div className="rounded-2xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+                            Todavía no hay transferencias registradas.
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </section>
               ) : null}
@@ -204,6 +223,14 @@ export default function TesoreriaPage() {
       <NuevaTransferenciaModal
         open={transferModalOpen}
         onClose={() => setTransferModalOpen(false)}
+        bankAccounts={(treasuryView?.bankBalances ?? []).map((b) => ({
+          id: b.id,
+          label: `${b.bank}${b.account && b.account !== "—" ? ` — ${b.account}` : ""}`,
+        }))}
+        onSaved={() => {
+          setTransferModalOpen(false);
+          loadTreasury();
+        }}
       />
     </div>
   );

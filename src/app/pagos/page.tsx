@@ -33,11 +33,14 @@ export default function PagosPage() {
     ReturnType<typeof mapPayablesApiPayload> | null
   >(null);
 
+  const [bankAccounts, setBankAccounts] = React.useState<{ id: string; label: string }[]>([]);
+  const [bankAccountsError, setBankAccountsError] = React.useState<string | null>(null);
+
   const onNavigate = useSidebarNavigate({
     onAfterNavigate: () => setSidebarOpen(false),
   });
 
-  React.useEffect(() => {
+  const loadPayables = React.useCallback(() => {
     let cancelled = false;
     setPayablesLoading(true);
     setPayablesError(null);
@@ -72,6 +75,64 @@ export default function PagosPage() {
       cancelled = true;
     };
   }, []);
+
+  const loadBankAccounts = React.useCallback(() => {
+    let cancelled = false;
+    setBankAccountsError(null);
+    fetch("/api/cash", { cache: "no-store" })
+      .then(async (res) => {
+        const body = (await res.json()) as
+          | {
+              ok?: boolean;
+              error?: string;
+              bankBalances?: { id: string; bank?: string; balance?: unknown }[];
+            }
+          | undefined;
+
+        if (!res.ok || body?.ok !== true) {
+          throw new Error(
+            typeof body?.error === "string" && body.error.trim()
+              ? body.error
+              : "No se pudieron cargar las cuentas bancarias.",
+          );
+        }
+
+        const accounts = (body.bankBalances ?? [])
+          .map((row) => {
+            const id = typeof row.id === "string" ? row.id : "";
+            const bank = typeof row.bank === "string" ? row.bank : "";
+            const balance = Number(row.balance);
+            const suffix = Number.isFinite(balance) ? ` — $${balance.toLocaleString("es-AR")}` : "";
+            const label = `${bank || "Cuenta"}${suffix}`;
+            return id ? { id, label } : null;
+          })
+          .filter((x): x is { id: string; label: string } => x !== null);
+
+        if (cancelled) return;
+        setBankAccounts(accounts);
+        setBankAccountsError(null);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setBankAccounts([]);
+        setBankAccountsError(
+          e instanceof Error ? e.message : "No se pudieron cargar las cuentas bancarias.",
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const cancelPayables = loadPayables();
+    const cancelAccounts = loadBankAccounts();
+    return () => {
+      cancelPayables();
+      cancelAccounts();
+    };
+  }, [loadPayables, loadBankAccounts]);
 
   const topbarCompanies = React.useMemo(() => {
     if (payablesView?.organization) {
@@ -190,28 +251,44 @@ export default function PagosPage() {
                     currency={displayCurrency}
                   />
 
-                  <div className="grid gap-4 lg:grid-cols-3">
-                    <div className="lg:col-span-1">
-                      <UpcomingPaymentsTable
-                        title="Próximos pagos"
-                        items={payablesView.upcoming}
-                        currency={displayCurrency}
-                      />
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div>
+                      {payablesView.upcoming.length > 0 ? (
+                        <UpcomingPaymentsTable
+                          title="Próximos pagos"
+                          items={payablesView.upcoming}
+                          currency={displayCurrency}
+                        />
+                      ) : (
+                        <div className="qp-card">
+                          <div className="qp-card-header">
+                            <div className="text-base font-semibold tracking-tight">
+                              Próximos pagos
+                            </div>
+                          </div>
+                          <div className="qp-card-content">
+                            <div className="rounded-2xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+                              Todavía no hay pagos programados.
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="lg:col-span-1">
+                    <div>
                       <VendorsTable
                         title="Proveedores"
                         items={payablesView.vendors}
                         currency={displayCurrency}
                       />
                     </div>
-                    <div className="lg:col-span-1">
-                      <RecentPaymentsTable
-                        title="Pagos recientes"
-                        items={payablesView.recent}
-                        currency={displayCurrency}
-                      />
-                    </div>
+                  </div>
+
+                  <div>
+                    <RecentPaymentsTable
+                      title="Pagos recientes"
+                      items={payablesView.recent}
+                      currency={displayCurrency}
+                    />
                   </div>
                 </section>
               ) : null}
@@ -220,7 +297,16 @@ export default function PagosPage() {
         </div>
       </div>
 
-      <ProgramarPagoModal open={pagoModalOpen} onClose={() => setPagoModalOpen(false)} />
+      <ProgramarPagoModal
+        open={pagoModalOpen}
+        onClose={() => setPagoModalOpen(false)}
+        bankAccounts={bankAccounts}
+        onSaved={() => {
+          setPagoModalOpen(false);
+          loadPayables();
+          loadBankAccounts();
+        }}
+      />
     </div>
   );
 }

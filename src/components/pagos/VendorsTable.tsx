@@ -14,15 +14,6 @@ export type VendorsTableProps = {
 
 const PAGE_SIZE = 3;
 
-function VendorAvatar({ name }: { name: string }) {
-  const initial = name.trim().slice(0, 1).toUpperCase() || "P";
-  return (
-    <span className="inline-flex size-7 items-center justify-center rounded-xl bg-[color:var(--quipu-ice)] text-[color:var(--quipu-night)] text-xs font-bold ring-1 ring-[color:var(--quipu-border)]">
-      {initial}
-    </span>
-  );
-}
-
 export function VendorsTable({ title, items, currency }: VendorsTableProps) {
   const [page, setPage] = React.useState(0);
   const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
@@ -48,10 +39,7 @@ export function VendorsTable({ title, items, currency }: VendorsTableProps) {
               {pagedItems.map((row) => (
                 <tr key={row.id} className="hover:bg-black/[0.02]">
                   <td className="py-3 pr-4">
-                    <div className="flex items-center gap-3">
-                      <VendorAvatar name={row.vendor} />
-                      <div className="font-medium text-foreground">{row.vendor}</div>
-                    </div>
+                    <div className="font-medium text-foreground">{row.vendor}</div>
                   </td>
                   <td className="py-3 pr-4">
                     <span className="inline-flex items-center rounded-full bg-white/60 px-2.5 py-1 text-xs font-semibold text-foreground ring-1 ring-black/10">

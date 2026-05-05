@@ -19,6 +19,7 @@ import {
   mapReceivablesApiPayload,
   type ReceivablesApiSuccessPayload,
 } from "@/components/cobros/mapReceivablesApi";
+import { formatMoney, formatShortDate } from "@/components/inicio/format";
 
 export default function CobrosPage() {
   useRequireDemoAuth();
@@ -32,11 +33,14 @@ export default function CobrosPage() {
     ReturnType<typeof mapReceivablesApiPayload> | null
   >(null);
 
+  const [bankAccounts, setBankAccounts] = React.useState<{ id: string; label: string }[]>([]);
+  const [bankAccountsError, setBankAccountsError] = React.useState<string | null>(null);
+
   const onNavigate = useSidebarNavigate({
     onAfterNavigate: () => setSidebarOpen(false),
   });
 
-  React.useEffect(() => {
+  const loadReceivables = React.useCallback(() => {
     let cancelled = false;
     setReceivablesLoading(true);
     setReceivablesError(null);
@@ -71,6 +75,64 @@ export default function CobrosPage() {
       cancelled = true;
     };
   }, []);
+
+  const loadBankAccounts = React.useCallback(() => {
+    let cancelled = false;
+    setBankAccountsError(null);
+    fetch("/api/cash", { cache: "no-store" })
+      .then(async (res) => {
+        const body = (await res.json()) as
+          | {
+              ok?: boolean;
+              error?: string;
+              bankBalances?: { id: string; bank?: string; balance?: unknown }[];
+            }
+          | undefined;
+
+        if (!res.ok || body?.ok !== true) {
+          throw new Error(
+            typeof body?.error === "string" && body.error.trim()
+              ? body.error
+              : "No se pudieron cargar las cuentas bancarias.",
+          );
+        }
+
+        const accounts = (body.bankBalances ?? [])
+          .map((row) => {
+            const id = typeof row.id === "string" ? row.id : "";
+            const bank = typeof row.bank === "string" ? row.bank : "";
+            const balance = Number(row.balance);
+            const suffix = Number.isFinite(balance) ? ` — $${balance.toLocaleString("es-AR")}` : "";
+            const label = `${bank || "Cuenta"}${suffix}`;
+            return id ? { id, label } : null;
+          })
+          .filter((x): x is { id: string; label: string } => x !== null);
+
+        if (cancelled) return;
+        setBankAccounts(accounts);
+        setBankAccountsError(null);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setBankAccounts([]);
+        setBankAccountsError(
+          e instanceof Error ? e.message : "No se pudieron cargar las cuentas bancarias.",
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const cancelReceivables = loadReceivables();
+    const cancelAccounts = loadBankAccounts();
+    return () => {
+      cancelReceivables();
+      cancelAccounts();
+    };
+  }, [loadReceivables, loadBankAccounts]);
 
   const topbarCompanies = React.useMemo(() => {
     if (receivablesView?.organization) {
@@ -203,6 +265,58 @@ export default function CobrosPage() {
                       currency={displayCurrency}
                     />
                   </div>
+
+                  <div className="qp-card">
+                    <div className="qp-card-header">
+                      <div>
+                        <div className="text-base font-semibold tracking-tight">
+                          Cobros recientes
+                        </div>
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          Últimos cobros registrados.
+                        </div>
+                      </div>
+                    </div>
+                    <div className="qp-card-content">
+                      {receivablesView.recentCollections &&
+                      receivablesView.recentCollections.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-sm">
+                            <thead className="text-left text-xs text-muted-foreground">
+                              <tr className="border-b border-border">
+                                <th className="py-3 pr-4 font-medium">Fecha</th>
+                                <th className="py-3 pr-4 font-medium">Descripción</th>
+                                <th className="py-3 pr-4 font-medium">Cuenta destino</th>
+                                <th className="py-3 pl-2 text-right font-medium">Monto</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              {receivablesView.recentCollections.map((row) => (
+                                <tr key={row.id} className="hover:bg-black/[0.02]">
+                                  <td className="py-3 pr-4 text-muted-foreground">
+                                    {formatShortDate(row.date)}
+                                  </td>
+                                  <td className="py-3 pr-4 text-foreground">
+                                    {row.description}
+                                  </td>
+                                  <td className="py-3 pr-4 text-muted-foreground">
+                                    {row.bankAccountName ?? "—"}
+                                  </td>
+                                  <td className="py-3 pl-2 text-right font-semibold text-foreground">
+                                    {formatMoney(row.amount, displayCurrency)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+                          Todavía no hay cobros registrados.
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </section>
               ) : null}
             </div>
@@ -213,6 +327,12 @@ export default function CobrosPage() {
       <RegisterCobroModal
         open={cobroModalOpen}
         onClose={() => setCobroModalOpen(false)}
+        bankAccounts={bankAccounts}
+        onSaved={() => {
+          setCobroModalOpen(false);
+          loadReceivables();
+          loadBankAccounts();
+        }}
       />
     </div>
   );

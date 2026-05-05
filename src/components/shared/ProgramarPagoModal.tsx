@@ -6,6 +6,7 @@ export type ProgramarPagoModalProps = {
   open: boolean;
   onClose: () => void;
   onSaved?: () => void;
+  bankAccounts?: { id: string; label: string }[];
 };
 
 type FormState = {
@@ -39,10 +40,30 @@ function useOnEscape(active: boolean, onEscape: () => void) {
   }, [active, onEscape]);
 }
 
-export function ProgramarPagoModal({ open, onClose, onSaved }: ProgramarPagoModalProps) {
+function parseIsoDate(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const d = new Date(trimmed);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
+function toPositiveNumber(raw: string): number | null {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || !(n > 0)) return null;
+  return Math.abs(n);
+}
+
+export function ProgramarPagoModal({
+  open,
+  onClose,
+  onSaved,
+  bankAccounts = [],
+}: ProgramarPagoModalProps) {
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const [form, setForm] = React.useState<FormState>(defaultState);
   const [error, setError] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
 
   const closeAndReset = React.useCallback(() => {
     setError(null);
@@ -63,24 +84,63 @@ export function ProgramarPagoModal({ open, onClose, onSaved }: ProgramarPagoModa
     closeAndReset();
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const missing =
-      !form.paymentDate.trim() ||
-      !form.amount.trim() ||
-      !form.vendor.trim() ||
-      !form.concept.trim() ||
-      !form.sourceAccount.trim();
-
-    if (missing) {
-      setError("Completá todos los campos.");
+    const paymentDate = parseIsoDate(form.paymentDate);
+    if (!paymentDate) {
+      setError("La fecha de pago es obligatoria.");
       return;
     }
 
-    onSaved?.();
-    closeAndReset();
+    const amount = toPositiveNumber(form.amount);
+    if (amount == null) {
+      setError("El monto debe ser mayor a 0.");
+      return;
+    }
+
+    const description = form.concept.trim();
+    if (!description) {
+      setError("El concepto es obligatorio.");
+      return;
+    }
+
+    const vendorName = form.vendor.trim() ? form.vendor.trim() : undefined;
+    const bankAccountId = form.sourceAccount.trim() ? form.sourceAccount.trim() : undefined;
+    const category = form.category.trim() ? form.category.trim() : undefined;
+
+    try {
+      setSaving(true);
+      const res = await fetch("/api/payables/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentDate,
+          amount,
+          vendorName,
+          description,
+          bankAccountId,
+          category,
+        }),
+      });
+
+      const body = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || body.ok !== true) {
+        throw new Error(
+          typeof body.error === "string" && body.error.trim()
+            ? body.error
+            : "No se pudo programar el pago.",
+        );
+      }
+
+      onSaved?.();
+      closeAndReset();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "No se pudo programar el pago.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!open) return null;
@@ -168,13 +228,32 @@ export function ProgramarPagoModal({ open, onClose, onSaved }: ProgramarPagoModa
               <label className="qp-label" htmlFor="pp-source">
                 Cuenta origen
               </label>
-              <input
-                id="pp-source"
-                type="text"
-                className="qp-input"
-                value={form.sourceAccount}
-                onChange={(e) => setForm((s) => ({ ...s, sourceAccount: e.target.value }))}
-              />
+              {bankAccounts.length > 0 ? (
+                <select
+                  id="pp-source"
+                  className="qp-input"
+                  value={form.sourceAccount}
+                  onChange={(e) => setForm((s) => ({ ...s, sourceAccount: e.target.value }))}
+                  disabled={saving}
+                >
+                  <option value="">Seleccionar…</option>
+                  {bankAccounts.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id="pp-source"
+                  type="text"
+                  className="qp-input"
+                  value={form.sourceAccount}
+                  onChange={(e) => setForm((s) => ({ ...s, sourceAccount: e.target.value }))}
+                  placeholder="(opcional)"
+                  disabled={saving}
+                />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -206,8 +285,12 @@ export function ProgramarPagoModal({ open, onClose, onSaved }: ProgramarPagoModa
             <button type="button" className="qp-btn-secondary h-10 px-4" onClick={closeAndReset}>
               Cancelar
             </button>
-            <button type="submit" className="qp-btn-primary h-10 px-4">
-              Programar pago
+            <button
+              type="submit"
+              className="qp-btn-primary h-10 px-4 disabled:pointer-events-none disabled:opacity-60"
+              disabled={saving}
+            >
+              {saving ? "Programando…" : "Programar pago"}
             </button>
           </div>
         </form>

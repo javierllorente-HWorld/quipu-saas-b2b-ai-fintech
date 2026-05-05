@@ -9,8 +9,10 @@ export type GenerateReportModalProps = {
 };
 
 type FormState = {
+  title: string;
   report: string;
   period: string;
+  format: string;
 };
 
 const REPORT_OPTIONS = [
@@ -19,10 +21,13 @@ const REPORT_OPTIONS = [
 ] as const;
 
 const PERIOD_OPTIONS = ["Mensual", "Trimestral", "Anual"] as const;
+const FORMAT_OPTIONS = ["PDF", "Excel", "CSV"] as const;
 
 const defaultState: FormState = {
+  title: "",
   report: "",
   period: "",
+  format: "PDF",
 };
 
 function useOnEscape(active: boolean, onEscape: () => void) {
@@ -40,6 +45,15 @@ export function GenerateReportModal({ open, onClose, onGenerated }: GenerateRepo
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const [form, setForm] = React.useState<FormState>(defaultState);
   const [error, setError] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!open) return;
+    // Asegura default válido aunque el estado quede vacío por algún motivo.
+    if (!FORMAT_OPTIONS.includes(form.format as (typeof FORMAT_OPTIONS)[number])) {
+      setForm((s) => ({ ...s, format: "PDF" }));
+    }
+  }, [open, form.format]);
 
   useOnEscape(open, () => {
     onClose();
@@ -62,12 +76,18 @@ export function GenerateReportModal({ open, onClose, onGenerated }: GenerateRepo
     closeAndReset();
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (!form.report || !form.period) {
-      setError("Seleccioná reporte y período.");
+    const title = form.title.trim();
+    if (!title) {
+      setError("Ingresá un nombre para el reporte.");
+      return;
+    }
+
+    if (!form.report || !form.period || !form.format) {
+      setError("Completá los campos obligatorios.");
       return;
     }
 
@@ -81,8 +101,41 @@ export function GenerateReportModal({ open, onClose, onGenerated }: GenerateRepo
       return;
     }
 
-    onGenerated?.();
-    closeAndReset();
+    const format = form.format.trim() || "PDF";
+    if (!FORMAT_OPTIONS.includes(format as (typeof FORMAT_OPTIONS)[number])) {
+      setError("Seleccioná un formato válido.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const res = await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          reportType: form.report,
+          period: form.period,
+          format,
+        }),
+      });
+
+      const body = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || body.ok !== true) {
+        throw new Error(
+          typeof body.error === "string" && body.error.trim()
+            ? body.error
+            : "No se pudo generar el reporte.",
+        );
+      }
+
+      onGenerated?.();
+      closeAndReset();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "No se pudo generar el reporte.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!open) return null;
@@ -113,6 +166,21 @@ export function GenerateReportModal({ open, onClose, onGenerated }: GenerateRepo
         <form onSubmit={onSubmit} className="px-6 pb-6 pt-5">
           <div className="grid gap-4">
             <div className="space-y-2">
+              <label className="qp-label" htmlFor="gr-title">
+                Nombre del reporte
+              </label>
+              <input
+                id="gr-title"
+                type="text"
+                className="qp-input"
+                placeholder="Ej: Reporte financiero mayo 2026"
+                value={form.title}
+                onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
+                disabled={saving}
+              />
+            </div>
+
+            <div className="space-y-2">
               <label className="qp-label" htmlFor="gr-report">
                 Reporte
               </label>
@@ -121,6 +189,7 @@ export function GenerateReportModal({ open, onClose, onGenerated }: GenerateRepo
                 className="h-11 w-full rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground"
                 value={form.report}
                 onChange={(e) => setForm((s) => ({ ...s, report: e.target.value }))}
+                disabled={saving}
               >
                 <option value="" disabled>
                   Seleccionar…
@@ -142,11 +211,31 @@ export function GenerateReportModal({ open, onClose, onGenerated }: GenerateRepo
                 className="h-11 w-full rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground"
                 value={form.period}
                 onChange={(e) => setForm((s) => ({ ...s, period: e.target.value }))}
+                disabled={saving}
               >
                 <option value="" disabled>
                   Seleccionar…
                 </option>
                 {PERIOD_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="qp-label" htmlFor="gr-format">
+                Formato
+              </label>
+              <select
+                id="gr-format"
+                className="h-11 w-full rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground"
+                value={form.format}
+                onChange={(e) => setForm((s) => ({ ...s, format: e.target.value }))}
+                disabled={saving}
+              >
+                {FORMAT_OPTIONS.map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
                   </option>
@@ -165,8 +254,12 @@ export function GenerateReportModal({ open, onClose, onGenerated }: GenerateRepo
             <button type="button" className="qp-btn-secondary h-10 px-4" onClick={closeAndReset}>
               Cancelar
             </button>
-            <button type="submit" className="qp-btn-primary h-10 px-4">
-              Generar reporte
+            <button
+              type="submit"
+              className="qp-btn-primary h-10 px-4 disabled:pointer-events-none disabled:opacity-60"
+              disabled={saving}
+            >
+              {saving ? "Generando…" : "Generar reporte"}
             </button>
           </div>
         </form>

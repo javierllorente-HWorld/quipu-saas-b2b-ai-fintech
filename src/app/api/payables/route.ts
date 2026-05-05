@@ -22,8 +22,70 @@ function toIsoDate(value: unknown): string | null {
   return null;
 }
 
+type PaymentsCols = {
+  hasCreatedAt: boolean;
+  hasNotes: boolean;
+  hasDescription: boolean;
+  hasCategory: boolean;
+  hasBankAccountId: boolean;
+  hasVendorId: boolean;
+};
+
+async function detectPaymentsColumns(): Promise<PaymentsCols> {
+  const res = await query(
+    `SELECT column_name
+     FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'payments'`,
+  );
+  const names = new Set(
+    (res.rows as { column_name?: unknown }[])
+      .map((r) => (typeof r.column_name === "string" ? r.column_name : ""))
+      .filter(Boolean),
+  );
+  return {
+    hasCreatedAt: names.has("created_at"),
+    hasNotes: names.has("notes"),
+    hasDescription: names.has("description"),
+    hasCategory: names.has("category"),
+    hasBankAccountId: names.has("bank_account_id"),
+    hasVendorId: names.has("vendor_id"),
+  };
+}
+
 export async function GET() {
   try {
+    const paymentsCols = await detectPaymentsColumns();
+    const scheduledOrder = paymentsCols.hasCreatedAt
+      ? "p.payment_date ASC NULLS LAST, p.created_at DESC NULLS LAST"
+      : "p.payment_date ASC NULLS LAST, p.id DESC";
+
+    const scheduledVendorSelect = paymentsCols.hasVendorId
+      ? "COALESCE(NULLIF(TRIM(v.name), ''), NULL) AS vendor_name"
+      : "NULL::text AS vendor_name";
+    const scheduledVendorJoin = paymentsCols.hasVendorId
+      ? "LEFT JOIN vendors v ON v.id = p.vendor_id AND v.organization_id = p.organization_id"
+      : "";
+
+    const scheduledBankSelect = paymentsCols.hasBankAccountId
+      ? "COALESCE(NULLIF(TRIM(ba.bank_name), ''), NULLIF(TRIM(ba.name), ''), NULL) AS bank_account_name"
+      : "NULL::text AS bank_account_name";
+    const scheduledBankJoin = paymentsCols.hasBankAccountId
+      ? "LEFT JOIN bank_accounts ba ON ba.id = p.bank_account_id AND ba.organization_id = p.organization_id"
+      : "";
+
+    const scheduledCategorySelect = paymentsCols.hasCategory
+      ? "p.category::text AS category"
+      : "NULL::text AS category";
+
+    const scheduledDescriptionExpr = paymentsCols.hasNotes && paymentsCols.hasDescription
+      ? "COALESCE(NULLIF(TRIM(p.notes), ''), NULLIF(TRIM(p.description), ''), 'Pago programado')"
+      : paymentsCols.hasNotes
+        ? "COALESCE(NULLIF(TRIM(p.notes), ''), 'Pago programado')"
+        : paymentsCols.hasDescription
+          ? "COALESCE(NULLIF(TRIM(p.description), ''), 'Pago programado')"
+          : "'Pago programado'";
+
     const [
       orgRes,
       kpiBillsRes,
@@ -33,6 +95,7 @@ export async function GET() {
       upcomingRes,
       vendorsRes,
       recentRes,
+      scheduledRes,
     ] = await Promise.all([
       query(
         `SELECT id, name, default_currency
@@ -159,6 +222,25 @@ export async function GET() {
          LIMIT 10`,
         [ORGANIZATION_ID]
       ),
+      query(
+        `SELECT
+           p.id,
+           p.payment_date AS payment_date,
+           ${scheduledVendorSelect},
+           (${scheduledDescriptionExpr}) AS description,
+           p.amount,
+           ${scheduledCategorySelect},
+           ${scheduledBankSelect},
+           p.status
+         FROM payments p
+         ${scheduledVendorJoin}
+         ${scheduledBankJoin}
+         WHERE p.organization_id = $1::uuid
+           AND p.status = 'scheduled'
+         ORDER BY ${scheduledOrder}
+         LIMIT 10`,
+        [ORGANIZATION_ID]
+      ),
     ]);
 
     const orgRow = orgRes.rows[0] as
@@ -237,6 +319,26 @@ export async function GET() {
       status: row.status,
     }));
 
+    const scheduledPayments = (scheduledRes.rows as {
+      id: string;
+      payment_date: Date | string | null;
+      vendor_name: string | null;
+      description: string | null;
+      amount: unknown;
+      category: string | null;
+      bank_account_name: string | null;
+      status: string;
+    }[]).map((row) => ({
+      id: row.id,
+      paymentDate: toIsoDate(row.payment_date),
+      vendorName: row.vendor_name ?? undefined,
+      description: row.description ?? "",
+      amount: toNumber(row.amount),
+      category: row.category ?? undefined,
+      bankAccountName: row.bank_account_name ?? undefined,
+      status: row.status,
+    }));
+
     return NextResponse.json({
       ok: true,
       organization,
@@ -248,6 +350,7 @@ export async function GET() {
       },
       calendar,
       upcomingPayments,
+      scheduledPayments,
       vendors,
       recentPayments,
     });
