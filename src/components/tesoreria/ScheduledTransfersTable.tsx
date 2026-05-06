@@ -4,7 +4,10 @@ import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney, formatShortDate } from "@/components/inicio/format";
 import type { RecentTransferRow } from "./mock";
-import { PagosCardPagination } from "@/components/pagos/PagosCardPagination";
+import {
+  PagosCardPagination,
+  PagosCardTableWithFooter,
+} from "@/components/pagos/PagosCardPagination";
 
 export type ScheduledTransfersTableProps = {
   title: string;
@@ -30,42 +33,45 @@ export function ScheduledTransfersTable({
         <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
       <div className="qp-card-content">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="text-left text-xs text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="py-3 pr-4 font-medium">Fecha</th>
-                <th className="py-3 pr-4 font-medium">Cuenta</th>
-                <th className="py-3 pr-4 font-medium">Descripción</th>
-                <th className="py-3 pl-2 text-right font-medium">Importe</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {pagedItems.map((row) => (
-                <tr key={row.id} className="hover:bg-black/[0.02]">
-                  <td className="py-3 pr-4 text-muted-foreground">
-                    {row.date ? formatShortDate(row.date) : "Sin fecha"}
-                  </td>
-                  <td className="py-3 pr-4 font-medium text-foreground">
-                    {row.account}
-                  </td>
-                  <td className="py-3 pr-4 text-muted-foreground">
-                    {row.description}
-                  </td>
-                  <td className="py-3 pl-2 text-right font-semibold text-foreground">
-                    {formatMoney(row.amount, currency)}
-                  </td>
+        <PagosCardTableWithFooter
+          table={
+            <table className="min-w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="py-3 pr-4 font-medium">Fecha</th>
+                  <th className="py-3 pr-4 font-medium">Cuenta</th>
+                  <th className="py-3 pr-4 font-medium">Descripción</th>
+                  <th className="py-3 pl-2 text-right font-medium">Importe</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <PagosCardPagination
-          pageIndex={pageIdx}
-          totalPages={totalPages}
-          onPrev={() => setPage((p) => Math.max(0, p - 1))}
-          onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {pagedItems.map((row) => (
+                  <tr key={row.id} className="hover:bg-black/[0.02]">
+                    <td className="py-3 pr-4 text-muted-foreground">
+                      {row.date ? formatShortDate(row.date) : "Sin fecha"}
+                    </td>
+                    <td className="py-3 pr-4 font-medium text-foreground">
+                      {row.account}
+                    </td>
+                    <td className="py-3 pr-4 text-muted-foreground">
+                      {row.description}
+                    </td>
+                    <td className="py-3 pl-2 text-right font-semibold text-foreground">
+                      {formatMoney(row.amount, currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          }
+          footer={
+            <PagosCardPagination
+              pageIndex={pageIdx}
+              totalPages={totalPages}
+              onPrev={() => setPage((p) => Math.max(0, p - 1))}
+              onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            />
+          }
         />
       </div>
     </div>

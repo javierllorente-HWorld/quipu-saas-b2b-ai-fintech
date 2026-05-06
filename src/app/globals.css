@@ -53,6 +53,11 @@ body {
 }
 
 @layer base {
+  /* Base scale (~15/16); rem-based UI moves together like ~94% zoom without zoom/transform */
+  html {
+    font-size: 15px;
+  }
+
   ::selection {
     background: rgba(46, 107, 255, 0.22);
   }
@@ -122,7 +127,7 @@ body {
   }
 
   .qp-subtitle {
-    @apply text-pretty text-base leading-7 text-muted-foreground;
+    @apply text-pretty text-base leading-6 text-muted-foreground;
   }
 
   .qp-label {
@@ -140,41 +145,41 @@ body {
   }
 
   .qp-card-header {
-    @apply px-6 pt-6;
+    @apply px-5 pt-5;
   }
 
   .qp-card-content {
-    @apply px-6 pb-6;
+    @apply px-5 pb-5;
   }
 
   /* KPI strip: 1 col mobile, 3 cols tablet (3+2), 5 cols wide desktop */
   .qp-kpi-row {
-    @apply grid min-w-0 grid-cols-1 gap-3;
-    @apply md:grid-cols-3 md:gap-3;
+    @apply grid min-w-0 grid-cols-1 gap-2.5;
+    @apply md:grid-cols-3 md:gap-2.5;
     @apply xl:grid-cols-5 xl:gap-1.5;
   }
 
   /* Caja: three KPI cards stay balanced at xl (global row uses 5 cols for other modules). */
   .qp-kpi-row.qp-kpi-row-caja {
-    @apply xl:grid-cols-3 xl:gap-3;
+    @apply xl:grid-cols-3 xl:gap-2.5;
   }
 
   .qp-kpi-row.qp-kpi-row-cobros {
-    @apply xl:grid-cols-3 xl:gap-3;
+    @apply xl:grid-cols-3 xl:gap-2.5;
   }
 
   .qp-kpi-row.qp-kpi-row-pagos {
-    @apply xl:grid-cols-3 xl:gap-3;
+    @apply xl:grid-cols-3 xl:gap-2.5;
   }
 
   .qp-kpi-row.qp-kpi-row-tesoreria {
-    @apply xl:grid-cols-3 xl:gap-3;
+    @apply xl:grid-cols-3 xl:gap-2.5;
   }
 
   .qp-kpi-row.qp-kpi-row-reportes {
-    @apply md:grid-cols-2 md:gap-3;
-    @apply lg:grid-cols-4 lg:gap-3;
-    @apply xl:grid-cols-4 xl:gap-3;
+    @apply md:grid-cols-2 md:gap-2.5;
+    @apply lg:grid-cols-4 lg:gap-2.5;
+    @apply xl:grid-cols-4 xl:gap-2.5;
   }
 
   .qp-kpi-row > .qp-card {
@@ -182,11 +187,11 @@ body {
   }
 
   .qp-kpi-row .qp-card-header {
-    @apply xl:px-4 xl:pt-4;
+    @apply xl:px-3 xl:pt-3;
   }
 
   .qp-kpi-row .qp-card-content {
-    @apply xl:px-4 xl:pb-4;
+    @apply xl:px-3 xl:pb-3;
   }
 
   .qp-kpi-row .qp-kpi-stat {
@@ -195,24 +200,24 @@ body {
 
   /* Buttons */
   .qp-btn {
-    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-medium transition active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-medium transition active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .qp-btn-primary {
-    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:opacity-90 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:opacity-90 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .qp-btn-secondary {
-    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-medium text-foreground transition hover:bg-white/70 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-medium text-foreground transition hover:bg-white/70 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .qp-btn-ghost {
-    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-transparent px-5 text-sm font-medium text-foreground transition hover:bg-black/5 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full bg-transparent px-5 text-sm font-medium text-foreground transition hover:bg-black/5 active:translate-y-px disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   /* Inputs */
   .qp-input {
-    @apply h-11 w-full cursor-text rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground placeholder:text-muted-foreground transition disabled:cursor-not-allowed;
+    @apply h-10 w-full cursor-text rounded-2xl border border-border bg-white/70 px-4 text-sm text-foreground placeholder:text-muted-foreground transition disabled:cursor-not-allowed;
   }
 
   .qp-input:focus {

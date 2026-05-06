@@ -139,10 +139,11 @@ export function mapReceivablesApiPayload(payload: ReceivablesApiSuccessPayload) 
   });
 
   const recentCollections: RecentCollection[] = (payload.recentCollections ?? [])
+    .filter((c) => typeof c.id === "string" && c.id.trim().length > 0)
     .map((c) => {
       const date = parseIsoDateOrNull(c.date ?? undefined);
       return {
-        id: c.id,
+        id: c.id.trim(),
         date,
         description: c.description || "—",
         amount: c.amount,

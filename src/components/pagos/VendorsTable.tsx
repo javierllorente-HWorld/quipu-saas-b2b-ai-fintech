@@ -4,7 +4,7 @@ import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney } from "@/components/inicio/format";
 import type { VendorRow } from "./mock";
-import { PagosCardPagination } from "./PagosCardPagination";
+import { PagosCardPagination, PagosCardTableWithFooter } from "./PagosCardPagination";
 
 export type VendorsTableProps = {
   title: string;
@@ -26,40 +26,43 @@ export function VendorsTable({ title, items, currency }: VendorsTableProps) {
         <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
       <div className="qp-card-content">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="text-left text-xs text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="py-3 pr-4 font-medium">Proveedor</th>
-                <th className="py-3 pr-4 font-medium">Pagos pendientes</th>
-                <th className="py-3 pl-2 text-right font-medium">Importe</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {pagedItems.map((row) => (
-                <tr key={row.id} className="hover:bg-black/[0.02]">
-                  <td className="py-3 pr-4">
-                    <div className="font-medium text-foreground">{row.vendor}</div>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="inline-flex items-center rounded-full bg-white/60 px-2.5 py-1 text-xs font-semibold text-foreground ring-1 ring-black/10">
-                      {row.pendingCount}
-                    </span>
-                  </td>
-                  <td className="py-3 pl-2 text-right font-semibold text-foreground">
-                    {formatMoney(row.amount, currency)}
-                  </td>
+        <PagosCardTableWithFooter
+          table={
+            <table className="min-w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="py-3 pr-4 font-medium">Proveedor</th>
+                  <th className="py-3 pr-4 font-medium">Pagos pendientes</th>
+                  <th className="py-3 pl-2 text-right font-medium">Importe</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <PagosCardPagination
-          pageIndex={pageIdx}
-          totalPages={totalPages}
-          onPrev={() => setPage((p) => Math.max(0, p - 1))}
-          onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {pagedItems.map((row) => (
+                  <tr key={row.id} className="hover:bg-black/[0.02]">
+                    <td className="py-3 pr-4">
+                      <div className="font-medium text-foreground">{row.vendor}</div>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className="inline-flex items-center rounded-full bg-white/60 px-2.5 py-1 text-xs font-semibold text-foreground ring-1 ring-black/10">
+                        {row.pendingCount}
+                      </span>
+                    </td>
+                    <td className="py-3 pl-2 text-right font-semibold text-foreground">
+                      {formatMoney(row.amount, currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          }
+          footer={
+            <PagosCardPagination
+              pageIndex={pageIdx}
+              totalPages={totalPages}
+              onPrev={() => setPage((p) => Math.max(0, p - 1))}
+              onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            />
+          }
         />
       </div>
     </div>

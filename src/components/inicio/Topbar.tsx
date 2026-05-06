@@ -76,7 +76,7 @@ function mapRecentMovementToActivity(m: CashRecentMovement): ActivityItem {
   };
 }
 
-export function Topbar({
+function TopbarInner({
   companies,
   activeCompanyId,
   onCompanyChange,
@@ -244,7 +244,7 @@ export function Topbar({
 
   return (
     <div className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -370,4 +370,6 @@ export function Topbar({
     </div>
   );
 }
+
+export const Topbar = React.memo(TopbarInner);
 

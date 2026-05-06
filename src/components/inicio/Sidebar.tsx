@@ -57,7 +57,7 @@ export type SidebarProps = {
   forceExpanded?: boolean;
 };
 
-export function Sidebar({
+function SidebarInner({
   activeKey = "inicio",
   onNavigate,
   footerCta,
@@ -84,8 +84,8 @@ export function Sidebar({
       className={[
         "relative h-full bg-[color:var(--quipu-night)] text-white overflow-visible",
         "md:sticky md:top-0 md:h-screen md:shrink-0 md:self-start",
-        "w-[220px] md:transition-[width] md:duration-200 md:ease-out",
-        effectiveCollapsed ? "md:w-[72px]" : "md:w-[220px]",
+        "w-[200px] md:transition-[width] md:duration-200 md:ease-out",
+        effectiveCollapsed ? "md:w-[72px]" : "md:w-[200px]",
       ].join(" ")}
     >
       <button
@@ -123,7 +123,7 @@ export function Sidebar({
 
       <div
         className={[
-          "flex h-full min-h-0 flex-col py-5",
+          "flex h-full min-h-0 flex-col py-4",
           effectiveCollapsed ? "px-2" : "px-2.5",
         ].join(" ")}
       >
@@ -154,7 +154,7 @@ export function Sidebar({
           )}
         </div>
 
-        <div className="mt-7 flex min-h-0 flex-1 flex-col gap-6">
+        <div className="mt-6 flex min-h-0 flex-1 flex-col gap-5">
           <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <div className="space-y-1">
               <SidebarLink
@@ -245,6 +245,8 @@ export function Sidebar({
     </aside>
   );
 }
+
+export const Sidebar = React.memo(SidebarInner);
 
 function SidebarLink({
   item,

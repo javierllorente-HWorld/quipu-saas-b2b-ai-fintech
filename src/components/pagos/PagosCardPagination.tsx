@@ -1,5 +1,24 @@
 "use client";
 
+import type { ReactNode } from "react";
+
+export type PagosCardTableWithFooterProps = {
+  table: ReactNode;
+  footer: ReactNode;
+};
+
+/**
+ * Mantiene la paginación al pie de la card (derecha) con espacio flexible si hay pocas filas.
+ */
+export function PagosCardTableWithFooter({ table, footer }: PagosCardTableWithFooterProps) {
+  return (
+    <div className="flex min-h-[10.5rem] flex-col sm:min-h-[12.5rem] md:min-h-[14rem]">
+      <div className="min-h-0 flex-1 overflow-x-auto">{table}</div>
+      <div className="mt-auto w-full shrink-0">{footer}</div>
+    </div>
+  );
+}
+
 export type PagosCardPaginationProps = {
   pageIndex: number;
   totalPages: number;
