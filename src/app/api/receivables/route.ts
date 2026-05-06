@@ -121,6 +121,8 @@ export async function GET() {
            AND cm.direction = 'in'
            AND cm.category = 'collections'
            AND cm.status = 'confirmed'
+           AND cm.voided_at IS NULL
+           AND cm.reverses_movement_id IS NULL
          ORDER BY cm.movement_date DESC NULLS LAST, cm.created_at DESC NULLS LAST
          LIMIT 8`,
         [ORGANIZATION_ID]

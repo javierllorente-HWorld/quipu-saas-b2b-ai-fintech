@@ -4,7 +4,7 @@ import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney, formatShortDate } from "@/components/inicio/format";
 import type { RecentPayment } from "./mock";
-import { PagosCardPagination } from "./PagosCardPagination";
+import { PagosCardPagination, PagosCardTableWithFooter } from "./PagosCardPagination";
 
 export type RecentPaymentsTableProps = {
   title: string;
@@ -47,42 +47,45 @@ export function RecentPaymentsTable({ title, items, currency }: RecentPaymentsTa
         <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
       <div className="qp-card-content">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="text-left text-xs text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="py-3 pr-4 font-medium">Fecha</th>
-                <th className="py-3 pr-4 font-medium">Proveedor</th>
-                <th className="py-3 pr-4 font-medium">Método</th>
-                <th className="py-3 pr-4 font-medium">Importe</th>
-                <th className="py-3 pl-2 text-right font-medium">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {pagedItems.map((row) => (
-                <tr key={row.id} className="hover:bg-black/[0.02]">
-                  <td className="py-3 pr-4 text-muted-foreground">
-                    {row.date ? formatShortDate(row.date) : "Sin fecha"}
-                  </td>
-                  <td className="py-3 pr-4 font-medium text-foreground">{row.vendor}</td>
-                  <td className="py-3 pr-4 text-muted-foreground">{row.method}</td>
-                  <td className="py-3 pr-4 font-semibold text-foreground">
-                    {formatMoney(row.amount, currency)}
-                  </td>
-                  <td className="py-3 pl-2 text-right">
-                    <StatusPill status={row.status} />
-                  </td>
+        <PagosCardTableWithFooter
+          table={
+            <table className="min-w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="py-3 pr-4 font-medium">Fecha</th>
+                  <th className="py-3 pr-4 font-medium">Proveedor</th>
+                  <th className="py-3 pr-4 font-medium">Método</th>
+                  <th className="py-3 pr-4 font-medium">Importe</th>
+                  <th className="py-3 pl-2 text-right font-medium">Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <PagosCardPagination
-          pageIndex={pageIdx}
-          totalPages={totalPages}
-          onPrev={() => setPage((p) => Math.max(0, p - 1))}
-          onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {pagedItems.map((row) => (
+                  <tr key={row.id} className="hover:bg-black/[0.02]">
+                    <td className="py-3 pr-4 text-muted-foreground">
+                      {row.date ? formatShortDate(row.date) : "Sin fecha"}
+                    </td>
+                    <td className="py-3 pr-4 font-medium text-foreground">{row.vendor}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{row.method}</td>
+                    <td className="py-3 pr-4 font-semibold text-foreground">
+                      {formatMoney(row.amount, currency)}
+                    </td>
+                    <td className="py-3 pl-2 text-right">
+                      <StatusPill status={row.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          }
+          footer={
+            <PagosCardPagination
+              pageIndex={pageIdx}
+              totalPages={totalPages}
+              onPrev={() => setPage((p) => Math.max(0, p - 1))}
+              onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            />
+          }
         />
       </div>
     </div>

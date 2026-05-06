@@ -19,6 +19,8 @@ export type PaymentsCalendarPoint = {
   overdue: number;
 };
 
+export type UpcomingPaymentOrigin = "payment" | "bill";
+
 export type UpcomingPayment = {
   id: string;
   /** ISO yyyy-mm-dd cuando existe en API; null si no hay fecha. */
@@ -26,6 +28,8 @@ export type UpcomingPayment = {
   vendor: string;
   description: string;
   amount: number;
+  /** `payment`: fila de `payments` programado; `bill`: factura pendiente usada como fallback. */
+  origin: UpcomingPaymentOrigin;
 };
 
 export type VendorRow = {

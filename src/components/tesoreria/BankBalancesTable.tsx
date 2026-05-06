@@ -4,7 +4,10 @@ import * as React from "react";
 import type { CurrencyCode } from "@/components/inicio/mock";
 import { formatMoney } from "@/components/inicio/format";
 import type { BankBalanceRow } from "./mock";
-import { PagosCardPagination } from "@/components/pagos/PagosCardPagination";
+import {
+  PagosCardPagination,
+  PagosCardTableWithFooter,
+} from "@/components/pagos/PagosCardPagination";
 
 export type TreasuryBankBalancesTableProps = {
   title: string;
@@ -47,38 +50,41 @@ export function TreasuryBankBalancesTable({
         <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
       <div className="qp-card-content">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="text-left text-xs text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="py-3 pr-4 font-medium">Banco</th>
-                <th className="py-3 pr-4 font-medium">Cuenta</th>
-                <th className="py-3 pr-4 font-medium">Saldo disponible</th>
-                <th className="py-3 pl-2 text-right font-medium">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {pagedItems.map((row) => (
-                <tr key={row.id} className="hover:bg-black/[0.02]">
-                  <td className="py-3 pr-4 font-medium text-foreground">{row.bank}</td>
-                  <td className="py-3 pr-4 text-muted-foreground">{row.account}</td>
-                  <td className="py-3 pr-4 font-semibold text-foreground">
-                    {formatMoney(row.available, currency)}
-                  </td>
-                  <td className="py-3 pl-2 text-right">
-                    <StatusPill status={row.status} />
-                  </td>
+        <PagosCardTableWithFooter
+          table={
+            <table className="min-w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="py-3 pr-4 font-medium">Banco</th>
+                  <th className="py-3 pr-4 font-medium">Cuenta</th>
+                  <th className="py-3 pr-4 font-medium">Saldo disponible</th>
+                  <th className="py-3 pl-2 text-right font-medium">Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <PagosCardPagination
-          pageIndex={pageIdx}
-          totalPages={totalPages}
-          onPrev={() => setPage((p) => Math.max(0, p - 1))}
-          onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {pagedItems.map((row) => (
+                  <tr key={row.id} className="hover:bg-black/[0.02]">
+                    <td className="py-3 pr-4 font-medium text-foreground">{row.bank}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{row.account}</td>
+                    <td className="py-3 pr-4 font-semibold text-foreground">
+                      {formatMoney(row.available, currency)}
+                    </td>
+                    <td className="py-3 pl-2 text-right">
+                      <StatusPill status={row.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          }
+          footer={
+            <PagosCardPagination
+              pageIndex={pageIdx}
+              totalPages={totalPages}
+              onPrev={() => setPage((p) => Math.max(0, p - 1))}
+              onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            />
+          }
         />
       </div>
     </div>

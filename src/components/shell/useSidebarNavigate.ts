@@ -38,15 +38,17 @@ function pathForKey(key: NavigateKey) {
 
 export function useSidebarNavigate(options?: UseSidebarNavigateOptions) {
   const router = useRouter();
+  const onAfterNavigateRef = React.useRef(options?.onAfterNavigate);
+  onAfterNavigateRef.current = options?.onAfterNavigate;
 
   return React.useCallback(
     (key: string) => {
       const path = pathForKey(key as NavigateKey);
       if (!path) return;
       router.push(path);
-      options?.onAfterNavigate?.();
+      onAfterNavigateRef.current?.();
     },
-    [router, options],
+    [router],
   );
 }
 

@@ -137,6 +137,7 @@ export function mapPayablesApiPayload(payload: PayablesApiSuccessPayload) {
     vendor: p.vendorName?.trim() || "Proveedor no informado",
     description: p.description || "—",
     amount: p.amount,
+    origin: "payment" as const,
   }));
 
   const upcomingFallback: UpcomingPayment[] = payload.upcomingPayments.map((u) => ({
@@ -145,6 +146,7 @@ export function mapPayablesApiPayload(payload: PayablesApiSuccessPayload) {
     vendor: u.vendorName?.trim() || "Proveedor no informado",
     description: u.description || "—",
     amount: u.amount,
+    origin: "bill" as const,
   }));
 
   const upcoming: UpcomingPayment[] = scheduled.length > 0 ? scheduled : upcomingFallback;
