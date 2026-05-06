@@ -36,6 +36,8 @@ type ArtifactsCols = {
   hasFormat: boolean;
   hasStorageUrl: boolean;
   hasFileUrl: boolean;
+  hasCsvContent: boolean;
+  hasPdfContent: boolean;
 };
 
 async function detectReportArtifactsColumns(): Promise<ArtifactsCols> {
@@ -57,9 +59,11 @@ async function detectReportArtifactsColumns(): Promise<ArtifactsCols> {
     hasPeriodLabel: names.has("period_label"),
     hasGeneratedAt: names.has("generated_at"),
     hasCreatedAt: names.has("created_at"),
-    hasFormat: names.has("format"),
+    hasFormat: names.has("format") || names.has("\"format\""),
     hasStorageUrl: names.has("storage_url"),
     hasFileUrl: names.has("file_url"),
+    hasCsvContent: names.has("csv_content"),
+    hasPdfContent: names.has("pdf_content"),
   };
 }
 
@@ -97,6 +101,14 @@ export async function GET() {
       : raCols.hasFileUrl
         ? "COALESCE(ra.file_url, '') AS storage_url"
         : "''::text AS storage_url";
+
+    const csvOk = raCols.hasCsvContent
+      ? `(ra.csv_content IS NOT NULL AND TRIM(ra.csv_content) <> '')`
+      : `false`;
+    const pdfOk = raCols.hasPdfContent
+      ? `(ra.pdf_content IS NOT NULL AND octet_length(ra.pdf_content) > 0)`
+      : `false`;
+    const downloadableExpr = `(${csvOk} OR ${pdfOk}) AS downloadable`;
 
     const orderExpr = raCols.hasGeneratedAt
       ? "ra.generated_at DESC NULLS LAST, ra.id DESC"
@@ -174,7 +186,8 @@ export async function GET() {
            ${periodExpr},
            ${generatedExpr},
            ${formatExpr},
-           ${storageExpr}
+           ${storageExpr},
+           ${downloadableExpr}
          FROM report_artifacts ra
          WHERE ra.organization_id = $1::uuid
          ORDER BY ${orderExpr}
@@ -263,6 +276,7 @@ export async function GET() {
         generated_at: Date | string | null;
         report_format: string | null;
         storage_url: string | null;
+        downloadable: boolean;
       }[]
     ).map((row) => {
       let generatedAt: string | null = null;
@@ -280,6 +294,7 @@ export async function GET() {
         generatedAt,
         format: (row.report_format ?? "PDF").trim() || "PDF",
         storageUrl: (row.storage_url ?? "").trim(),
+        downloadable: Boolean(row.downloadable),
       };
     });
 

@@ -39,6 +39,7 @@ export type ReportsApiSuccessPayload = {
     generatedAt: string | null;
     format: string;
     storageUrl: string;
+    downloadable?: boolean;
   }>;
 };
 
@@ -105,6 +106,7 @@ function formatReportGenerated(value: unknown): string {
 function mapReportFormat(fmt: unknown): RecentReportRow["formato"] {
   const u = String(fmt ?? "").trim().toUpperCase();
   if (u === "XLSX" || u === "EXCEL") return "XLSX";
+  if (u === "CSV") return "CSV";
   return "PDF";
 }
 
@@ -119,7 +121,8 @@ function mapRecentReports(raw: unknown[]): RecentReportRow[] {
     const periodo = pickString(o, "periodo", "periodLabel", "period_label") || "—";
     const generado = formatReportGenerated(o.generado ?? o.generatedAt ?? o.generated_at);
     const formato = mapReportFormat(o.formato ?? o.format);
-    if (id) out.push({ id, nombre, periodo, generado, formato });
+    const downloadable = o.downloadable === true;
+    if (id) out.push({ id, nombre, periodo, generado, formato, downloadable });
   }
   return out;
 }
