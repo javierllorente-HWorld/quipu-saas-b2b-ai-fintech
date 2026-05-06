@@ -224,21 +224,22 @@ function SidebarInner({
               </div>
             )}
 
-            <button
-              type="button"
+            <a
+              href="https://wa.me/5492216161594?text=Hola%2C%20necesito%20ayuda%20con%20Quipu"
+              target="_blank"
+              rel="noopener noreferrer"
               className={[
                 "flex w-full items-center gap-3 rounded-2xl px-2.5 py-2 text-sm transition",
                 effectiveCollapsed ? "justify-center px-2" : "",
                 "text-white/80 hover:bg-white/5 hover:text-white",
               ].join(" ")}
-              onClick={() => onNavigate?.("help")}
               title={effectiveCollapsed ? "Centro de ayuda" : undefined}
             >
               <span className="text-white/80">
                 <IconHelp className="size-5" />
               </span>
               {effectiveCollapsed ? null : "Centro de ayuda"}
-            </button>
+            </a>
           </div>
         </div>
       </div>
