@@ -132,22 +132,38 @@ export function RecentReportsTable({ title, items, onRefresh }: RecentReportsTab
                         </span>
                       </td>
                       <td className="py-3 pl-2 text-right">
-                        <button
-                          type="button"
-                          disabled={deletingId !== null}
-                          onClick={() => void requestDelete(row)}
-                          className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition hover:bg-white/80 hover:text-rose-700 disabled:pointer-events-none disabled:opacity-40"
-                          aria-label={`Eliminar reporte ${row.nombre}`}
-                        >
-                          {busy ? (
-                            <span
-                              className="size-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
-                              aria-hidden
-                            />
-                          ) : (
-                            <TrashIcon />
-                          )}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          {row.downloadable ? (
+                            <a
+                              href={`/api/reports/${row.id}/download`}
+                              className={
+                                deletingId !== null
+                                  ? "pointer-events-none text-sm font-medium text-muted-foreground opacity-40"
+                                  : "text-sm font-medium text-foreground underline-offset-2 hover:underline"
+                              }
+                              aria-label={`Descargar ${row.nombre}`}
+                              aria-disabled={deletingId !== null || undefined}
+                            >
+                              Descargar
+                            </a>
+                          ) : null}
+                          <button
+                            type="button"
+                            disabled={deletingId !== null}
+                            onClick={() => void requestDelete(row)}
+                            className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition hover:bg-white/80 hover:text-rose-700 disabled:pointer-events-none disabled:opacity-40"
+                            aria-label={`Eliminar reporte ${row.nombre}`}
+                          >
+                            {busy ? (
+                              <span
+                                className="size-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+                                aria-hidden
+                              />
+                            ) : (
+                              <TrashIcon />
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -53,7 +53,7 @@ export type KeyIndicatorRow = {
   estado: IndicatorStatus;
 };
 
-export type RecentReportFormat = "PDF" | "XLSX";
+export type RecentReportFormat = "PDF" | "XLSX" | "CSV";
 
 export type RecentReportRow = {
   id: string;
@@ -61,4 +61,5 @@ export type RecentReportRow = {
   periodo: string;
   generado: string;
   formato: RecentReportFormat;
+  downloadable: boolean;
 };
