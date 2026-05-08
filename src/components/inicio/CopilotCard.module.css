@@ -1,0 +1,23 @@
+/* Scrollbar solo del historial del chat IA (WebKit + Firefox) */
+.chatScroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(46, 107, 255, 0.42) rgba(7, 27, 74, 0.35);
+}
+
+.chatScroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.chatScroll::-webkit-scrollbar-track {
+  background: rgba(7, 27, 74, 0.35);
+  border-radius: 9999px;
+}
+
+.chatScroll::-webkit-scrollbar-thumb {
+  background: rgba(46, 107, 255, 0.38);
+  border-radius: 9999px;
+}
+
+.chatScroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(46, 107, 255, 0.62);
+}
