@@ -153,17 +153,10 @@ export function CopilotCard({ suggestions }: CopilotCardProps) {
         return;
       }
 
-      if (typeof data.answer === "string") {
-        setMessages((prev) => [
-          ...prev,
-          { id: newId(), role: "assistant", content: data.answer },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { id: newId(), role: "assistant", content: "Respuesta inválida del servidor." },
-        ]);
-      }
+      const assistantAnswer =
+        typeof data.answer === "string" ? data.answer : "No pude generar una respuesta.";
+
+      setMessages((prev) => [...prev, { id: newId(), role: "assistant", content: assistantAnswer }]);
     } catch {
       setMessages((prev) => [
         ...prev,

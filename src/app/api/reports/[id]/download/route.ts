@@ -85,10 +85,10 @@ function pdfBufferFromRow(value: unknown): Buffer | null {
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ id: string }> | { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const params = await Promise.resolve(context.params);
+    const params = await context.params;
     const id = extractReportId(request, params?.id);
 
     if (!id) {
