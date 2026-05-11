@@ -161,7 +161,7 @@ Esto permite mostrar:
 - respuestas basadas en información almacenada;
 - persistencia de conversaciones.
 
-(CARGAR EL ARCHIVO DE LAS TABLAS DE DATA BASE) 
+<img width="4681" height="4188" alt="mermaid-diagram-quipu-saas" src="https://github.com/user-attachments/assets/f7ee9cf6-feba-4d9e-9b03-9a95647ad51f" />
 *Vista de la base de datos en Neon con tablas utilizadas por el producto.*
 
 ---
