@@ -218,9 +218,14 @@ function SidebarInner({
                 <div className="mt-1 text-xs text-white/70">
                   Automatizá reportes, aprobaciones y proyecciones.
                 </div>
-                <button className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white hover:opacity-90 active:translate-y-px">
+                <a
+                  href="https://quipu-landingpage.vercel.app/#planes"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-full bg-[color:var(--quipu-accent)] px-4 text-sm font-medium text-white hover:opacity-90 active:translate-y-px"
+                >
                   Ver plan
-                </button>
+                </a>
               </div>
             )}
 
