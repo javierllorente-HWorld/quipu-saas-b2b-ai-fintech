@@ -1,6 +1,10 @@
 "use client";
 
 import * as React from "react";
+import {
+  AutomaticAlertsCard,
+  type AutomaticAlertItem,
+} from "@/components/inicio/AutomaticAlertsCard";
 import { KpiRow } from "@/components/inicio/KpiRow";
 import { UpcomingTable } from "@/components/inicio/UpcomingTable";
 import type { Company, CurrencyCode, Kpi, UpcomingItem } from "@/components/inicio/mock";
@@ -43,6 +47,11 @@ type DashboardApiSuccess = {
   organization: DashboardApiOrg | null;
   kpis: DashboardApiKpis;
   upcomingEvents: UpcomingApiEvent[];
+};
+
+type AlertsApiSuccess = {
+  ok: true;
+  alerts: AutomaticAlertItem[];
 };
 
 function toCurrencyCode(value: unknown): CurrencyCode {
@@ -132,6 +141,27 @@ export default function InicioPage() {
   const [company, setCompany] = React.useState<Company>(topbarCompanyLoading);
   const [kpis, setKpis] = React.useState<Kpi[]>([]);
   const [upcoming, setUpcoming] = React.useState<UpcomingItem[]>([]);
+  const [automaticAlerts, setAutomaticAlerts] = React.useState<AutomaticAlertItem[]>([]);
+
+  const fetchAlerts = React.useCallback(async () => {
+    const res = await fetch("/api/alerts", { cache: "no-store" });
+    if (!res.ok) {
+      setAutomaticAlerts([]);
+      return;
+    }
+    let alertsJson: AlertsApiSuccess & { ok?: boolean };
+    try {
+      alertsJson = (await res.json()) as AlertsApiSuccess & { ok?: boolean };
+    } catch {
+      setAutomaticAlerts([]);
+      return;
+    }
+    if (alertsJson.ok && Array.isArray(alertsJson.alerts)) {
+      setAutomaticAlerts(alertsJson.alerts);
+    } else {
+      setAutomaticAlerts([]);
+    }
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -140,26 +170,42 @@ export default function InicioPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/dashboard", { cache: "no-store" });
+        const [dashRes, alertsRes] = await Promise.all([
+          fetch("/api/dashboard", { cache: "no-store" }),
+          fetch("/api/alerts", { cache: "no-store" }),
+        ]);
         if (cancelled) return;
-        const json = (await res.json()) as DashboardApiSuccess & { ok?: boolean; error?: string };
+        const json = (await dashRes.json()) as DashboardApiSuccess & { ok?: boolean; error?: string };
         if (cancelled) return;
-        if (!res.ok || !json.ok) {
+        if (!dashRes.ok || !json.ok) {
           setError(json.error ?? "No se pudo cargar el panel.");
           setCompany(topbarCompanyNeutral);
           setKpis(mapApiKpis({}));
           setUpcoming([]);
+          setAutomaticAlerts([]);
           return;
         }
         setCompany(companyFromOrg(json.organization));
         setKpis(mapApiKpis(json.kpis));
         setUpcoming(mapUpcomingEvents(json.upcomingEvents));
+
+        if (alertsRes.ok) {
+          const alertsJson = (await alertsRes.json()) as AlertsApiSuccess & { ok?: boolean };
+          if (!cancelled && alertsJson.ok && Array.isArray(alertsJson.alerts)) {
+            setAutomaticAlerts(alertsJson.alerts);
+          } else if (!cancelled) {
+            setAutomaticAlerts([]);
+          }
+        } else if (!cancelled) {
+          setAutomaticAlerts([]);
+        }
       } catch {
         if (cancelled) return;
         setError("No se pudo conectar con el servidor.");
         setCompany(topbarCompanyNeutral);
         setKpis(mapApiKpis({}));
         setUpcoming([]);
+        setAutomaticAlerts([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -210,6 +256,8 @@ export default function InicioPage() {
           <KpiRow kpis={kpis} currency={company.currency} />
 
           <UpcomingTable items={upcoming} currency={company.currency} />
+
+          <AutomaticAlertsCard items={automaticAlerts} onRefreshAlerts={fetchAlerts} />
         </section>
       )}
     </>

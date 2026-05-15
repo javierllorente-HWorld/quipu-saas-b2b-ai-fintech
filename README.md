@@ -133,6 +133,18 @@ Ejemplos:
 
 ---
 
+### Workflow automático de facturas vencidas
+
+QUIPU detecta facturas vencidas pendientes y genera alertas automáticas en el dashboard.
+
+El workflow consulta datos persistidos en Neon, crea alertas en la tabla `alerts` y evita duplicados mediante una restricción única.
+
+Endpoint:
+
+`POST /api/workflows/overdue-invoice-alerts`
+
+---
+
 ## Copiloto IA
 
 QUIPU incorpora un copiloto financiero con IA dentro de la plataforma.
