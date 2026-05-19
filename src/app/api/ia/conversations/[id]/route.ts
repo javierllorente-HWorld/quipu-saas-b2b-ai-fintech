@@ -62,3 +62,32 @@ export async function GET(
     return NextResponse.json({ error: "No se pudieron cargar los mensajes." }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: rawId } = await context.params;
+    const id = typeof rawId === "string" ? rawId.trim() : "";
+    if (!id || !isUuid(id)) {
+      return NextResponse.json({ error: "ID de conversación inválido." }, { status: 400 });
+    }
+
+    const deleted = await query(
+      `DELETE FROM ai_conversations
+       WHERE id = $1::uuid AND organization_id = $2::uuid
+       RETURNING id`,
+      [id, DEMO_ORGANIZATION_ID]
+    );
+
+    if (!deleted.rows[0]) {
+      return NextResponse.json({ error: "Conversación no encontrada." }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true, id });
+  } catch (error) {
+    console.error("DELETE /api/ia/conversations/[id]:", error);
+    return NextResponse.json({ error: "No se pudo eliminar la conversación." }, { status: 500 });
+  }
+}
