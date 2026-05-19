@@ -424,6 +424,16 @@ function isUuid(value: string): boolean {
   return UUID_RE.test(value.trim());
 }
 
+const CONVERSATION_TITLE_MAX_LEN = 80;
+
+/** Título inicial desde el primer mensaje del usuario (una línea, truncado). */
+function conversationTitleFromMessage(message: string): string {
+  const singleLine = message.replace(/\s+/g, " ").trim();
+  if (!singleLine) return "Nueva conversación";
+  if (singleLine.length <= CONVERSATION_TITLE_MAX_LEN) return singleLine;
+  return `${singleLine.slice(0, CONVERSATION_TITLE_MAX_LEN - 1)}…`;
+}
+
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -487,6 +497,7 @@ export async function POST(req: Request) {
   }
 
   let conversationId: string;
+  let isNewConversation = false;
   try {
     if (requestedConversationId) {
       const existing = await query(
@@ -499,6 +510,7 @@ export async function POST(req: Request) {
       }
       conversationId = row.id;
     } else {
+      isNewConversation = true;
       const created = await query(
         `INSERT INTO ai_conversations (organization_id, user_id)
          VALUES ($1::uuid, NULL)
@@ -517,6 +529,18 @@ export async function POST(req: Request) {
        VALUES ($1::uuid, $2::text, $3::text)`,
       [conversationId, "user", message]
     );
+
+    if (isNewConversation) {
+      const title = conversationTitleFromMessage(message);
+      await query(
+        `UPDATE ai_conversations
+         SET title = $1
+         WHERE id = $2::uuid
+           AND organization_id = $3::uuid
+           AND (title IS NULL OR TRIM(title) = '')`,
+        [title, conversationId, DEMO_ORGANIZATION_ID]
+      );
+    }
   } catch (error) {
     console.error("Error persisting IA chat (conversation/user message):", error);
     return NextResponse.json({ error: "No se pudo guardar el historial del chat." }, { status: 500 });
