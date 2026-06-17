@@ -178,9 +178,17 @@ Esto permite mostrar:
 
 ---
 
-## Stack
+## Aprendizajes del proyecto
 
-### Producto
+QUIPU fue el primer proyecto donde empecé a trabajar de forma más cercana a un flujo profesional de desarrollo.
+
+Me enfoqué en ordenar mejor los commits, separar cambios por ramas, cuidar los ambientes de trabajo y entender cómo se estructura un proyecto más grande a medida que crece.
+
+Más allá del resultado funcional, este proyecto me ayudó a comprender mejor cómo trabaja un developer y qué necesita para avanzar con mayor claridad, contexto y foco.
+
+---
+
+## Stack
 
 - Next.js
 - TypeScript
